@@ -1,6 +1,21 @@
-load csv from "file:///country.csv" as line create (:Country {country : line[1]})
+//Loading countries
+load csv from "file:///country.csv" as line 
+create (m :Country {country : line[1]})
 
-//THIS IS NOT WORKING YET
+//Loading cities and relating them to countries
 load csv from "file:///city.csv" as line
-match (co : Country {country: line[1]})
-create (:City {city: line[0] })-[:BELONGS_TO]->(co)
+match (co : Country)
+where co.country = line[1]
+create 	(c : City {city: line[0]}),
+		(c)-[r:BELONGS_TO]->(co)
+
+//Had to be careful because there are cities with the same names in differente countries. The "using periodic commit 100" is required because using match while loading a csv might be to intensive.
+using periodic commit 100
+load csv from "file:///address.csv" as line
+match (ci : City {city : line[3]})-[:BELONGS_TO]->(co : Country {country : line[6]})
+create	(ad : Address {	address : line[0],
+						address2 : line[1],
+                        district : line[2], 
+                        postal_code : line[4], 
+                        phone : line[5]}),
+		(ad)-[r:BELONGS_TO]->(ci)
