@@ -30,3 +30,13 @@ create(	c : Staff  {first_name: line[0],
                     username : line[6],
                     password : line[7]}),
 		(c)-[:LIVES_IN]->(ad)
+
+
+
+//Adds stores
+load csv from "file:///stores.csv" as line
+match	(ad:Address {address:line[0]})-[:BELONGS_TO]->(ci :City{city:line[1]})
+match	(st :Staff{username:line[2]})
+create	(ad)<-[:IS_IN]-(:Store)-[:MANAGED_BY]->(st)
+
+//The relation from staff to store is missing

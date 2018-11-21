@@ -44,7 +44,8 @@ into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/staff.csv'
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n';
 
-select address, city, username as manager from store
+--exporting stores
+select address, city, username from store
 inner join staff on store.manager_staff_id = staff.staff_id
 inner join address on store.address_id = address.address_id
 inner join city on address.city_id = city.city_id
