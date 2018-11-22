@@ -22,9 +22,47 @@ db.customer.aggregate([
 ])
 
 
+// 5 costumers que mais filmes alugaram - quase
+
+// 5 costumers que mais dinheiro gastaram no serviço
+
+// 5 filmes mais vistos
+
+// 5 staffs que mais dinheiro ganham
+db.staff.aggregate([
+    {$match: {active:1}},
+    {$lookup: {
+        from: 'payment',
+        localField: 'staff_id',
+        foreignField: 'staff_id',
+        as: 'PAYMENTS'
+    }},
+    {$project: {
+        _id:0,
+        // staff_id:1,
+        name:{$concat:["$first_name"," ","$last_name"]},
+        // PAYMENTS:{_id:0,rental_id:1,return_date:1},
+        numberPayments:{$size:"$PAYMENTS"},
+        totalMoneyPayments:{$sum:"$PAYMENTS.amount"},
+    }},
+    {$sort:{numberOfRentals:-1}},
+    {$limit:5}
+])
+
+
+// Ator que o costumer X mais viu
+
+// Clientes que mais tempo demoram a devolver os filmes (média)
+
+// Lojas com mais vendas/alugueres pronto
+
+
+
+
 
 // RANDOM STUFF //
 
+// 5 costumers que mais filmes alugaram - quase
 // todas as rentals para a MARY
 db.customer.aggregate([
     {$match: {first_name:"MARY"}},
