@@ -1,6 +1,6 @@
 // QUERYS //
 
-// 5 costumers que mais alugueres efetuaram
+// 5 costumers que mais alugueres efetuaram - DONE
 // pode ficar mais rapida (i think)
 db.customer.aggregate([
     {$match: {active:1}},
@@ -22,13 +22,13 @@ db.customer.aggregate([
 ])
 
 
-// 5 costumers que mais filmes alugaram - quase
+// 5 costumers que mais filmes alugaram - ON HOLD
 
 // 5 costumers que mais dinheiro gastaram no serviço
 
 // 5 filmes mais vistos
 
-// 5 staffs que mais dinheiro ganham
+// 5 staffs que mais dinheiro ganham - DONE
 db.staff.aggregate([
     {$match: {active:1}},
     {$lookup: {
@@ -63,9 +63,8 @@ db.staff.aggregate([
 // RANDOM STUFF //
 
 // 5 costumers que mais filmes alugaram - quase
-// todas as rentals para a MARY
 db.customer.aggregate([
-    {$match: {first_name:"MARY"}},
+    {$match: {active:1}},
     {$lookup: {
         from: 'rental',
         localField: 'customer_id',
@@ -80,13 +79,17 @@ db.customer.aggregate([
     },
     {$project: {
         _id:0,
-        customer_id:1,
+        // customer_id:1,
         first_name:1,
         // RentalList:{_id:0,rental_id:1,return_date:1},
         numRentals:{$size:"$RentalList"},
         // INVENTARIO:{inventory_id:1,film_id:1},
         // numInventorys:{$size:"$INVENTARIO"},
-    }}
+        // 'INVENTARIO.film_id':1,
+        numFilms:{$size:"$INVENTARIO"},
+    }},
+    {$sort:{numFilms:-1}}
+    // {$limit:20}
 ])
 
 
