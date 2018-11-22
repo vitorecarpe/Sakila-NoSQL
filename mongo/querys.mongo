@@ -1,0 +1,55 @@
+// QUERYS //
+
+// 5 costumers que mais alugueres efetuaram
+// pode ficar mais rapida (i think)
+db.customer.aggregate([
+    {$match: {active:1}},
+    {$lookup: {
+        from: 'rental',
+        localField: 'customer_id',
+        foreignField: 'customer_id',
+        as: 'RentalList'
+    }},
+    {$project: {
+        _id:0,
+        // customer_id:1,
+        name:{$concat:["$first_name"," ","$last_name"]},
+        // RentalList:{_id:0,rental_id:1,return_date:1},
+        numberOfRentals:{$size:"$RentalList"},
+    }},
+    {$sort:{numberOfRentals:-1}},
+    {$limit:5}
+])
+
+
+
+// RANDOM STUFF //
+
+// todas as rentals para a MARY
+db.customer.aggregate([
+    {$match: {first_name:"MARY"}},
+    {$lookup: {
+        from: 'rental',
+        localField: 'customer_id',
+        foreignField: 'customer_id',
+        as: 'RentalList'}
+    },
+    {$lookup: {
+        from: 'inventory',
+        localField: 'RentalList.inventory_id',
+        foreignField: 'inventory_id',
+        as: 'INVENTARIO'}
+    },
+    {$project: {
+        _id:0,
+        customer_id:1,
+        first_name:1,
+        // RentalList:{_id:0,rental_id:1,return_date:1},
+        numRentals:{$size:"$RentalList"},
+        // INVENTARIO:{inventory_id:1,film_id:1},
+        // numInventorys:{$size:"$INVENTARIO"},
+    }}
+])
+
+
+
