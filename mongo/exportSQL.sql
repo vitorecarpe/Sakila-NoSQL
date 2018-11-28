@@ -1,6 +1,6 @@
 # TODO:
 # decidir o schema
-
+# tratar de campos com valores vazios
 
 ### remover os vazios
 #Antes de exportar as moradas altera as que têm um null inserido de uma forma diferente (apenas 4)
@@ -11,7 +11,6 @@ where address2 = '';
 
 
 ### CUSTOMER tables ###
-# remover
 # export table customer
 select * from customer
 into outfile 'sakila_nosql/csv/customer.csv'
@@ -87,9 +86,4 @@ LINES TERMINATED BY '\n';
 # export table 
 
 
-
-
-##### testing #####
-select * from city;
-select * from country;
 
