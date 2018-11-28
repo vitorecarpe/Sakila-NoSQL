@@ -1,6 +1,0 @@
-// command to use the project database
-use projeto_nosql
-// show all the collections in database
-show collections
-
-// more random stuff
