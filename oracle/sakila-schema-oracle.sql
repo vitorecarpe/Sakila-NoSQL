@@ -3,10 +3,13 @@
 CREATE TABLE actor (
   actor_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   first_name VARCHAR(45) NOT NULL,
-  last_name VARCHAR(45) NOT NULL UNIQUE,
+  last_name VARCHAR(45) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
   CONSTRAINT actor_PK PRIMARY KEY (actor_id)
 );
+
+CREATE INDEX actor_last_name_IDX
+ON actor (last_name);
 
 CREATE TABLE category (
   category_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -25,45 +28,107 @@ CREATE TABLE country (
 CREATE TABLE city (
   city_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   city VARCHAR(50) NOT NULL,
-  country_id SMALLINT NOT NULL UNIQUE,
+  country_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
   CONSTRAINT city_PK PRIMARY KEY (city_id),
   CONSTRAINT country_FK FOREIGN KEY (country_id) REFERENCES country(country_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(country_id > 0)
 );
 
+CREATE INDEX city_country_id_IDX
+ON city (country_id);
+
 CREATE TABLE address (
   address_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   address VARCHAR(50) NOT NULL,
   address2 VARCHAR(50) DEFAULT NULL,
   district VARCHAR(20) NOT NULL,
-  city_id SMALLINT NOT NULL UNIQUE,
+  city_id SMALLINT NOT NULL,
   postal_code VARCHAR(10) DEFAULT NULL,
   phone VARCHAR(20) NOT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
   CONSTRAINT address_PK PRIMARY KEY (address_id),
   CONSTRAINT city_FK FOREIGN KEY (city_id) REFERENCES city(city_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
-  CHECK(country_id > 0)
   CHECK(city_id > 0)
 );
 
+CREATE INDEX address_city_id_IDX
+ON address (city_id);
+
+--- TUDO FUNCIONA ATÉ AQUI....
+
+CREATE TABLE staff (
+  staff_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  first_name VARCHAR(45) NOT NULL,
+  last_name VARCHAR(45) NOT NULL,
+  address_id SMALLINT NOT NULL,
+  picture BLOB DEFAULT NULL,
+  email VARCHAR(50) DEFAULT NULL,
+  store_id SMALLINT NOT NULL,
+  active NUMBER(1,0) DEFAULT 1,
+  username VARCHAR(16) NOT NULL,
+  password VARCHAR(40) BINARY DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ???
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- ON UPDATE CURRENT_TIMESTAMP
+  CONSTRAINT staff_PK PRIMARY KEY (staff_id),
+  CONSTRAINT address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
+  CHECK(staff_id > 0), 
+  CHECK(address_id > 0),
+  CHECK(store_id > 0)
+);
+
+CREATE INDEX staff_store_id_IDX
+ON staff (store_id);
+
+CREATE INDEX staff_address_id_IDX
+ON staff (address_id);
+
+CREATE TABLE store (
+  store_id SMALLINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  manager_staff_id TINYINT NOT NULL,
+  address_id SMALLINT NOT NULL,
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT store_PK PRIMARY KEY (store_id),
+  CONSTRAINT staff_FK FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
+  CHECK(store_id > 0),
+  CHECK(manager_staff_id > 0),
+  CHECK(address_id > 0)
+);
+
+CREATE INDEX store_manager_staff_id_IDX
+ON store (manager_staff_id);
+
+CREATE INDEX store_address_id_IDX
+ON store (address_id);
+
+ALTER TABLE staff
+ADD CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id); -- ON DELETE RESTRICT ON UPDATE CASCADE,
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
-  store_id TINYINT  NOT NULL UNIQUE,
+  store_id TINYINT NOT NULL,
   first_name VARCHAR(45) NOT NULL,
-  last_name VARCHAR(45) NOT NULL UNIQUE,
+  last_name VARCHAR(45) NOT NULL,
   email VARCHAR(50) DEFAULT NULL,
-  address_id SMALLINT NOT NULL UNIQUE,
-  active BOOLEAN NOT NULL DEFAULT TRUE,
-  create_date DATETIME NOT NULL, -- ORACLE NAO RECONHECE DATETIME... FIX THIS
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
+  address_id SMALLINT NOT NULL,
+  active NUMBER(1,0) NOT NULL DEFAULT TRUE,
+  create_date DATE NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP testar se é necessario trigger...
   CONSTRAINT customer_PK PRIMARY KEY  (customer_id),
   CONSTRAINT address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(address_id > 0),
   CHECK(store_id > 0)
 );
+
+CREATE INDEX customer_store_id_IDX
+ON customer (store_id);
+
+CREATE INDEX customer_last_name_IDX
+ON customer (last_name);
+
+CREATE INDEX customer_address_id_IDX
+ON customer (address_id);
 
 -- TUDO O QUE TA PARA BAIXO AINDA NAO VI...
 -- Table structure for table `film`
@@ -74,22 +139,32 @@ CREATE TABLE film (
   title VARCHAR(255) NOT NULL,
   description TEXT DEFAULT NULL,
   release_year YEAR DEFAULT NULL,
-  language_id TINYINT UNSIGNED NOT NULL,
-  original_language_id TINYINT UNSIGNED DEFAULT NULL,
-  rental_duration TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  language_id SMALLINT NOT NULL,
+  original_language_id SMALLINT DEFAULT NULL,
+  rental_duration SMALLINT NOT NULL DEFAULT 3,
   rental_rate DECIMAL(4,2) NOT NULL DEFAULT 4.99,
-  length SMALLINT UNSIGNED DEFAULT NULL,
+  length SMALLINT DEFAULT NULL,
   replacement_cost DECIMAL(5,2) NOT NULL DEFAULT 19.99,
   rating ENUM('G','PG','PG-13','R','NC-17') DEFAULT 'G',
   special_features SET('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') DEFAULT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY  (film_id),
-  KEY idx_title (title),
-  KEY idx_fk_language_id (language_id),
-  KEY idx_fk_original_language_id (original_language_id),
-  CONSTRAINT fk_film_language FOREIGN KEY (language_id) REFERENCES language (language_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_film_language_original FOREIGN KEY (original_language_id) REFERENCES language (language_id) ON DELETE RESTRICT ON UPDATE CASCADE
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT film_PL PRIMARY KEY  (film_id),
+  CONSTRAINT language_FK FOREIGN KEY (language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT language_original_FK FOREIGN KEY (original_language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
+  CHECK(language_id > 0),
+  CHECK(original_language_id > 0),
+  CHECK(rental_duration > 0),
+  CHECK(length > 0)
 );
+
+CREATE INDEX film_title_IDX
+ON film (title);
+
+CREATE INDEX film_language_id_IDX
+ON film (language_id);
+
+CREATE INDEX film_original_language_id_IDX
+ON film (original_language_id);
 
 --
 -- Table structure for table `film_actor`
@@ -100,12 +175,14 @@ CREATE TABLE film_actor (
   film_id SMALLINT NOT NULL,
   last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (actor_id,film_id),
-  KEY idx_fk_film_id (`film_id`),
   CONSTRAINT fk_film_actor_actor FOREIGN KEY (actor_id) REFERENCES actor (actor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_film_actor_film FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(actor_id > 0),
   CHECK(film_id > 0)
 );
+
+CREATE INDEX film_actor_film_id_IDX
+ON film_actor (film_id);
 
 --
 -- Table structure for table `film_category`
@@ -240,25 +317,6 @@ CREATE TABLE rental (
 --
 -- Table structure for table `staff`
 --
-
-CREATE TABLE staff (
-  staff_id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  first_name VARCHAR(45) NOT NULL,
-  last_name VARCHAR(45) NOT NULL,
-  address_id SMALLINT UNSIGNED NOT NULL,
-  picture BLOB DEFAULT NULL,
-  email VARCHAR(50) DEFAULT NULL,
-  store_id TINYINT UNSIGNED NOT NULL,
-  active BOOLEAN NOT NULL DEFAULT TRUE,
-  username VARCHAR(16) NOT NULL,
-  password VARCHAR(40) BINARY DEFAULT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY  (staff_id),
-  KEY idx_fk_store_id (store_id),
-  KEY idx_fk_address_id (address_id),
-  CONSTRAINT fk_staff_store FOREIGN KEY (store_id) REFERENCES store (store_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_staff_address FOREIGN KEY (address_id) REFERENCES address (address_id) ON DELETE RESTRICT ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `store`
@@ -568,7 +626,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE FUNCTION inventory_in_stock(p_inventory_id INT) RETURNS BOOLEAN
+CREATE FUNCTION inventory_in_stock(p_inventory_id INT) RETURNS NUMBER(1,0)
 READS SQL DATA
 BEGIN
     DECLARE v_rentals INT;
