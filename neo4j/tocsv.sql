@@ -99,3 +99,40 @@ inner join film_actor on film.film_id = film_actor.film_id
 inner join actor on film_actor.actor_id = actor.actor_id
 into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/film_actors.csv'
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n';
+
+--export inventory. It's a many to many relation with a property film_text. Film title is unique. Film title is always equal to the the title in film_text, therefore is redundant. For every film-store relation there is a new line. In neo4j there will be a single relation with a counter instead.
+select film.title, store_id, film_text.description, count(*) from inventory
+inner join film on inventory.film_id = film.film_id
+inner join film_text on inventory.film_id = film_text.film_id
+group by film.film_id, store_id
+into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/inventory.csv'
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n';
+
+select count(distinct(film_text.description)) as c from inventory --this proves there is no film-store relation with more than a diferent description
+inner join film on inventory.film_id = film.film_id
+inner join film_text on inventory.film_id = film_text.film_id
+group by film.film_id, store_id, film_text.description
+having c <> 1;
+
+--export rental. With rental_id to make payment relations
+select staff.username, film.title, inventory.store_id, customer.first_name, customer.last_name, rental_date, return_date, rental_id from rental
+inner join staff on rental.staff_id = staff.staff_id
+inner join inventory on rental.inventory_id = inventory.inventory_id
+inner join film on inventory.film_id = film.film_id
+inner join customer on rental.customer_id = customer.customer_id
+into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/rental.csv'
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n';
+
+--export payment.
+select customer.first_name, customer.last_name, staff.username, rental_id, amount, payment_date, payment_id from payment
+inner join customer on payment.customer_id = customer.customer_id
+inner join staff on payment.staff_id = staff.staff_id
+into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/payment.csv'
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n';
+
+--export payment-rental relation. Necessary due to the existence of null
+select payment.payment_id, rental.rental_id from payment
+inner join rental on payment.rental_id = rental.rental_id
+into outfile '/usr/local/Cellar/neo4j/3.4.5/libexec/import/rental-payment.csv'
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n';
+
