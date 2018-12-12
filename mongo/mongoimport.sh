@@ -5,7 +5,7 @@ mongo.exe nosql --eval "db.dropDatabase()"
 
 # import documents
 echo " # INICIO !!!"
-#tabelas individuais
+# tabelas individuais automaticas do MySQL
 # mongoimport.exe --db nosql --type csv --file "./csv/actor.csv" --fields "actor_id","first_name","last_name","last_update"
 # mongoimport.exe --db nosql --type csv --file "./csv/address.csv" --fields "address_id","address","address2","district","city_id","postal_code","phone","location","last_update"
 # mongoimport.exe --db nosql --type csv --file "./csv/category.csv" --fields "category_id","name","last_update"
@@ -43,10 +43,62 @@ mongo.exe nosql --eval "db.customer2.aggregate([
     {\$project:{
         '_id':0,
         'customer_id':1,
+        'store_id':1,
         'name':1,
-        'address':1
+        'email':1,
+        'active':1,
+        'create_date':1,
+        'address':{
+            'address':1,
+            'district':1,
+            'postal_code':1,
+            'location':1,
+            'city':1,
+            'country':1,
+            'phone':1,
+            'last_update':1
+        },
+        'last_update':1
     }},
     {\$out:'customer'}
+])"
+
+mongo.exe nosql --eval "db.film2.aggregate([
+    {\$lookup: {
+        from: 'category2',
+        localField: 'film_id',
+        foreignField: 'film_id',
+        as: 'category'
+    }},
+    {\$unwind:'\$category'},
+    {\$lookup: {
+        from: 'actor2',
+        localField: 'film_id',
+        foreignField: 'film_id',
+        as: 'actor'
+    }},
+    {\$project:{
+        '_id':0,
+        'film_id':1,
+        'title':1,
+        'description':1,
+        'release_year':1,
+        'language':1,
+        'rental_duration':1,
+        'rental_rate':1,
+        'length':1,
+        'replacement_cost':1,
+        'rating':1,
+        'special_features':1,
+        'category':{
+            'category_name':1
+        },
+        'actor':{
+            'actor_name':1
+        },
+        'last_update':1
+    }},
+    {\$out:'film'}
 ])"
 
 echo " # TERMINADO !!!"
