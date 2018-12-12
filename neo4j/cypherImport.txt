@@ -82,3 +82,36 @@ create (f)-[:ACTED_BY]->(a)
 
 match (a:Actor)
 remove a.actor_id
+
+//Creates inventory. It's a relation between film and store, with a description of the film counting how many films there are
+load csv from "file:///inventory.csv" as line
+match (f : Film{title : line[0]})
+match (s : Store{store_id : line[1]})
+create (s)-[:HAS_FILM {description: line[2], how_many: line[3]}]->(f)
+
+//Creates rentals. 
+load csv from "file:///rental.csv" as line
+match (staff: Staff {username: line[0]})
+match (f:Film {title: line[1]})
+match (store:Store {store_id: line[2]})
+match (c:Customer {first_name: line[3], last_name: line[4]})
+create (staff)<-[:MADE_BY]-(r:Rental {rental_rate: line[5], return_date: line[6], rental_id: line[7]})-[:RENTED_FILM]->(f),(s)<-[:IN_STORE]-(r)-[:RENTED_BY]->(c)
+
+//Creates payments 
+load csv from "file:///payment.csv" as line
+match (c:Customer {first_name: line[0], last_name: line[1]})
+match (s:Staff {username: line[2]})
+create (c)<-[:PAYED_BY]-(p:Payment{amount: line[4], payment_date: line[5], payment_id: line[6]})-[:MADE_BY]->(s)
+
+//Creates the relation
+load csv from "file:///rental-payment.csv" as line
+match (p:Payment {payment_id: line[0]})
+match (r:Rental {rental_id : line[1]})
+create (p)-[:IS_RENT]->(r)
+
+//Removes the unnecessary ID's
+match (p:Payment)
+remove p.payment_id
+
+match (p:Rental)
+remove p.rental_id

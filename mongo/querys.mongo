@@ -96,4 +96,25 @@ db.customer.aggregate([
 ])
 
 
+// stuff
+db.customer.aggregate([
+    {$lookup: {
+        from: 'address_city_country',
+        localField: 'address_id',
+        foreignField: 'address_id',
+        as: 'address'
+    }},
+    {$unwind:'$address'},
+    {$project:{
+        "_id":0,
+        "customer_id":1,
+        "name":{$concat:['$first_name',' ','$last_name']},
+        "address":1
+        }
+
+    }
+    ,{$out:"hype"}
+])
+
+
 
