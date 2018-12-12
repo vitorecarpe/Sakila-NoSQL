@@ -8,6 +8,14 @@ CREATE TABLE actor (
   CONSTRAINT actor_PK PRIMARY KEY (actor_id)
 );
 
+-- TRUGGER QUE RESOLVE OS ON UPDATE CURRENT_TIMESTAMP
+CREATE OR REPLACE TRIGGER actor_timestamp_trigger
+    BEFORE UPDATE ON actor
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+
 CREATE INDEX actor_last_name_IDX
 ON actor (last_name);
 
