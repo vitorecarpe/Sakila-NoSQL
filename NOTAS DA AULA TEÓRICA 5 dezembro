@@ -1,0 +1,13 @@
+NOTAS DA AULA TEÓRICA 5 dezembro
+
+mongo
+-> modelação
+
+criar DB, coleções,...
+
+Operações sobre coleções
+-> inserir, apagar, alterar, consultar, agregar (lookup())
+
+
+TESTE
+exs práticos em mongo e neo4j
