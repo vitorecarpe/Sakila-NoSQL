@@ -11,6 +11,14 @@ CREATE TABLE actor (
 CREATE INDEX actor_last_name_IDX
 ON actor (last_name);
 
+-- TRUGGER QUE RESOLVE OS ON UPDATE CURRENT_TIMESTAMP
+CREATE OR REPLACE TRIGGER actor_timestamp_trigger
+    BEFORE UPDATE ON actor
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+
 CREATE TABLE category (
   category_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   name VARCHAR(25) NOT NULL,
@@ -18,12 +26,26 @@ CREATE TABLE category (
   CONSTRAINT category_PK PRIMARY KEY (category_id)
 );
 
+CREATE OR REPLACE TRIGGER category_timestamp_trigger
+    BEFORE UPDATE ON category
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+
 CREATE TABLE country (
   country_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   country VARCHAR(50) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, --ON UPDATE CURRENT_TIMESTAMP isto tem de ser com um trigger...
   CONSTRAINT country_PK PRIMARY KEY (country_id)
 );
+
+CREATE OR REPLACE TRIGGER country_timestamp_trigger
+    BEFORE UPDATE ON country
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
 
 CREATE TABLE city (
   city_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -37,6 +59,13 @@ CREATE TABLE city (
 
 CREATE INDEX city_country_id_IDX
 ON city (country_id);
+
+CREATE OR REPLACE TRIGGER city_timestamp_trigger
+    BEFORE UPDATE ON city
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
 
 CREATE TABLE address (
   address_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -52,8 +81,18 @@ CREATE TABLE address (
   CHECK(city_id > 0)
 );
 
+-- NOTA: 
+-- verfificar se precisamos de fazer alguma coisa para o caso do ON DELETE RESTRICT (supostamente esta sintax representa o que já é o comportamento normal de uma chave estrangeira, que é não poder eliminar o pai se existirem filhos)
+-- perguntar se vale a pena implementar o ON UPDATE CASCADE porque na verdade as chaves primárias não devem ser alteradas
 CREATE INDEX address_city_id_IDX
 ON address (city_id);
+
+CREATE OR REPLACE TRIGGER address_timestamp_trigger
+    BEFORE UPDATE ON address
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
 
 --- TUDO FUNCIONA ATÉ AQUI....
 
