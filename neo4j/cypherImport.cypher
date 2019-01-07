@@ -62,7 +62,7 @@ create (a)<-[:LIVES_IN]-(:Customer {first_name: line[0], last_name: line[1], ema
 
 //converts dates from string to datetime
 match(r:Customer)
-set r.create_date = datetime(replace(r.create_date," ","T"))
+set r.create_date = replace(r.create_date," ","T")
 return r
 
 //Creates the categories
@@ -110,7 +110,7 @@ remove a.actor_id
 load csv from "file:///inventory.csv" as line
 match (f : Film{title : line[0]})
 match (s : Store{store_id : line[1]})
-create (s)-[:HAS_FILM {description: line[2], how_many: line[3]}]->(f)
+create (s)-[:HAS_FILM {how_many: line[3]}]->(f)
 
 //Creates rentals. 
 load csv from "file:///rental.csv" as line

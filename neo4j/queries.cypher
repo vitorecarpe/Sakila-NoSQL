@@ -32,6 +32,14 @@ limit 5
 //Clientes mais demorados a devolver POR ACABAR
 match (c:Customer)<-[:RENTED_BY]-(r:Rental)
 where exists(r.return_date)
-return c, r
+with c, avg(duration.between(datetime(r.rental_date), datetime(r.return_date))) as avg_dur
+return c, avg_dur
+order by avg_dur desc
+limit 5
 
-#ALGO DE ERRADO SE PASSA COM O RENTAL_DATE
+//Top 5 das lojas com maior número de alugueres(pagamentos) lá efetuados
+match (s:Store)<-[:WORKS_AT]-(c:Staff)<-[:MADE_BY]-(p:Payment)
+return s,count(p)
+order by count(p)
+limit 5
+
