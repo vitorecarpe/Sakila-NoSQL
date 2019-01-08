@@ -21,20 +21,22 @@ echo " # INICIO !!!"
 # mongoimport.exe --db nosql --type csv --file "./csv/store.csv" --fields "store_id","manager_staff_id","address_id","last_update"
 
 echo " > IMPORTS !!!"
-#estas sao as que vamos importar
-mongoimport.exe --db nosql --type csv --file "./csv/customer2.csv" --fields "customer_id","store_id","name","email","address_id","active","create_date","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/address_city_country2.csv" --fields "address_id","address","district","postal_code","phone","location","city","country","last_update"
+# Tabelas que sao importadas
+mongoimport.exe --db nosql --type csv --file "./csv/customerAUX.csv" --fields "customer_id","store_id","name","email","address_id","active","create_date","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/address_city_countryAUX.csv" --fields "address_id","address","district","postal_code","phone","location","city","country","last_update"
 
-mongoimport.exe --db nosql --type csv --file "./csv/film2.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/category2.csv" --fields "category_name","film_id","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/actor2.csv" --fields "actor_name","film_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/filmAUX.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/categoryAUX.csv" --fields "category_name","film_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "actor_name","film_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/inventoryAUX.csv" --fields "film_id","store_id"
 
 
 echo " > JOINS !!!"
-#juntar o address embebido ao customer TODO faltam algumas projeçoes para completar
-mongo.exe nosql --eval "db.customer2.aggregate([
+# Aqui é onde agregamos algumas tabelas, como atributos embebidos
+#DONE?!? juntar o address embebido ao customer TODO faltam algumas projeçoes para completar
+mongo.exe nosql --eval "db.customerAUX.aggregate([
     {\$lookup: {
-        from: 'address_city_country2',
+        from: 'address_city_countryAUX',
         localField: 'address_id',
         foreignField: 'address_id',
         as: 'address'
@@ -63,16 +65,16 @@ mongo.exe nosql --eval "db.customer2.aggregate([
     {\$out:'customer'}
 ])"
 
-mongo.exe nosql --eval "db.film2.aggregate([
+mongo.exe nosql --eval "db.filmAUX.aggregate([
     {\$lookup: {
-        from: 'category2',
+        from: 'categoryAUX',
         localField: 'film_id',
         foreignField: 'film_id',
         as: 'category'
     }},
     {\$unwind:'\$category'},
     {\$lookup: {
-        from: 'actor2',
+        from: 'actorAUX',
         localField: 'film_id',
         foreignField: 'film_id',
         as: 'actor'

@@ -3,8 +3,8 @@
 
 
 // querys de import
-// NOTE tenho de dar um project melhor em todas as listas embebidas
-// juntar o address embebido no customer
+    // NOTE tenho de dar um project melhor em todas as listas embebidas
+    // juntar o address embebido no customer
 db.customer2.aggregate([
     {$lookup: {
         from: 'address_city_country2',
