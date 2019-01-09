@@ -101,7 +101,7 @@ OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
 # export table payment
-select rental_id, amount, payment_date from payment
+select staff_id, customer_id, rental_id, amount, payment_date, last_update from payment
 order by rental_id
 into outfile 'sakila_nosql/csv/paymentAUX.csv'
 FIELDS TERMINATED BY ','
