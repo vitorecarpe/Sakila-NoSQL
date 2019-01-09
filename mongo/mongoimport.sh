@@ -19,7 +19,7 @@ mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "acto
 mongoimport.exe --db nosql --type csv --file "./csv/filmAUX.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
 # Business
 mongoimport.exe --db nosql --type csv --file "./csv/other_payments.csv" --fields "payment_id","staff_id","customer_id","amount","payment_date"
-mongoimport.exe --db nosql --type csv --file "./csv/payment_rentalAUX.csv" --fields "rental_id","rental_date","film_id","title","inventory_id","staff_id","customer_id","return_date","staff_id","amount","payment_date"
+mongoimport.exe --db nosql --type csv --file "./csv/payment_rentalAUX.csv" --fields "rental_id","rental_date","film_id","title","amount","return_date","payment_date","inventory_id","staff_id","customer_id"
 mongoimport.exe --db nosql --type csv --file "./csv/staffAUX.csv" --fields "staff_id","staff_name","address_id","store_id","email","active","username","password","picture","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/storeAUX.csv" --fields "store_id","manager_id","address_id","last_update"
 
