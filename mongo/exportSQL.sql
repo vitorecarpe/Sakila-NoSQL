@@ -1,10 +1,6 @@
-# TODO:
-# decidir o schema
-# tratar de campos com valores vazios
-
 ##### Export de SQL para CSV #####
 # NOTA> Algumas tabelas foram juntadas por ser mais conveniente fazelo no SQL do que no mongo
-
+# TODO? tratar de campos com valores vazios
 
 ### remover os vazios
 #Antes de exportar as moradas altera as que têm um null inserido de uma forma diferente (apenas 4)
@@ -79,7 +75,9 @@ LINES TERMINATED BY '\n';
 
 ########## BUSINESS tables ##########
 # export table store
-select store_id, manager_staff_id, address_id, last_update from store
+select s.store_id, s.manager_staff_id, concat_ws(' ',staff.first_name,staff.last_name), s.address_id, s.last_update 
+from store as s, staff
+where s.manager_staff_id = staff.staff_id
 into outfile 'sakila_nosql/csv/storeAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -94,14 +92,14 @@ LINES TERMINATED BY '\n';
 
 # export table payment & rental
 select r.rental_id, r.rental_date, f.film_id, f.title, p.amount, r.return_date, p.payment_date, 
-		r.inventory_id, r.staff_id, r.customer_id
+		i.store_id, r.staff_id, r.customer_id
 from payment as p, rental as r, inventory as i, film as f
 where p.rental_id is not null
 and p.rental_id = r.rental_id
 and r.inventory_id = i.inventory_id
 and i.film_id = f.film_id
 order by rental_id
-into outfile 'sakila_nosql/csv/payment_rentalAUX.csv'
+into outfile 'sakila_nosql/csv/rental.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';

@@ -19,9 +19,9 @@ mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "acto
 mongoimport.exe --db nosql --type csv --file "./csv/filmAUX.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
 # Business
 mongoimport.exe --db nosql --type csv --file "./csv/other_payments.csv" --fields "payment_id","staff_id","customer_id","amount","payment_date"
-mongoimport.exe --db nosql --type csv --file "./csv/payment_rentalAUX.csv" --fields "rental_id","rental_date","film_id","title","amount","return_date","payment_date","inventory_id","staff_id","customer_id"
+mongoimport.exe --db nosql --type csv --file "./csv/rental.csv" --fields "rental_id","rental_date","film_id","film_title","amount","return_date","payment_date","store_id","staff_id","customer_id"
 mongoimport.exe --db nosql --type csv --file "./csv/staffAUX.csv" --fields "staff_id","staff_name","address_id","store_id","email","active","username","password","picture","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/storeAUX.csv" --fields "store_id","manager_id","address_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/storeAUX.csv" --fields "store_id","manager_id","manager_name","address_id","last_update"
 
 # Aqui é onde agregamos algumas tabelas, como atributos ou listas embebidas
 echo " > JOINS !!!"
@@ -67,7 +67,7 @@ mongo.exe nosql --eval "db.staffAUX.aggregate([
     {\$unwind:'\$address'},
     {\$project:{
         'staff_name':1,
-        'store_id_aux':'\$store_id',
+        'store_id':1,
         'email':1,
         'active':1,
         'username':1,
@@ -84,7 +84,7 @@ mongo.exe nosql --eval "db.staffAUX.aggregate([
             'last_update':1
         }
     }},
-    {\$out:'staff'}
+    {\$out:'staffAUX'}
 ])"
 # Agregar address ao store
 mongo.exe nosql --eval "db.storeAUX.aggregate([
@@ -97,7 +97,8 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
     {\$unwind:'\$address'},
     {\$project:{
         'store_id':1,
-        'manager_id_aux':'\$manager_id',
+        'manager_id':1,
+        'manager_name':1,
         'last_update':1,
         'address':{
             'address':1,
@@ -110,10 +111,10 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
             'last_update':1
         }
     }},
-    {\$out:'store'}
+    {\$out:'storeAUX'}
 ])"
 ########################################
-# Agregar category e actors ao film
+# Agregar category e actors e store(ID) ao film
 mongo.exe nosql --eval "db.filmAUX.aggregate([
     {\$lookup: {
         from: 'categoryAUX',
@@ -156,19 +157,46 @@ mongo.exe nosql --eval "db.filmAUX.aggregate([
     }},
     {\$out:'film'}
 ])"
-### TODO !!!
-# TODO Agregar rental ao staff
-# TODO Agregar staff e film(nome)
+# Agregar staff e film(ID) ao store
+mongo.exe nosql --eval "db.storeAUX.aggregate([
+    {\$lookup: {
+        from: 'staffAUX',
+        localField: 'store_id',
+        foreignField: 'store_id',
+        as: 'staff'
+    }},
+    {\$lookup: {
+        from: 'inventoryAUX',
+        localField: 'store_id',
+        foreignField: 'store_id',
+        as: 'available_films'
+    }},
+    {\$unwind:'\$staff'},
+    {\$unwind:'\$available_films'},
+    {\$group:{
+        '_id':'\$_id',
+        'store_id':{'\$first':'\$store_id'},
+        'manager_id':{'\$first':'\$manager_id'},
+        'manager_name':{'\$first':'\$manager_name'},
+        'last_update':{'\$first':'\$last_update'},
+        'address':{'\$first':'\$address'},
+        'staff': {'\$push':'\$actor.actor_name'},
+        'available_films': {'\$addToSet':'\$available_films.film_id'}
+    }},
+    {\$out:'store'}
+])"
 
 
 # Apagar tabelas auxiliares
 echo " > DELETES !!!"
 mongo.exe nosql --eval "db.address_city_countryAUX.drop();
                         db.customerAUX.drop()"
-# # mongo.exe nosql --eval "db.inventoryAUX.drop()"
 mongo.exe nosql --eval "db.categoryAUX.drop();
                         db.actorAUX.drop()"
-mongo.exe nosql --eval "db.filmAUX.drop()"
+mongo.exe nosql --eval "db.inventoryAUX.drop();
+                        db.filmAUX.drop()"
+mongo.exe nosql --eval "db.staffAUX.drop();
+                        db.storeAUX.drop()"
 
 
 echo " ### TERMINADO !!!"
