@@ -1,3 +1,15 @@
+-- COMANDOS PARA REMOVER AS TABELAS PARA TESTES
+drop table customer;
+ALTER TABLE staff
+DROP CONSTRAINT store_FK;
+drop table store;
+drop table staff;
+drop table actor;
+drop table address;
+drop table category;
+drop table city;
+drop table country;
+
 
 
 CREATE TABLE actor (
