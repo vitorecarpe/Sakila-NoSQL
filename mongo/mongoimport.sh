@@ -33,7 +33,9 @@ mongoimport.exe --db nosql --type csv --file "./csv/inventoryAUX.csv" --fields "
 
 echo " > JOINS !!!"
 # Aqui é onde agregamos algumas tabelas, como atributos embebidos
-#DONE?!? juntar o address embebido ao customer TODO faltam algumas projeçoes para completar
+
+##### Agregar address #####
+# Agregar address ao customer
 mongo.exe nosql --eval "db.customerAUX.aggregate([
     {\$lookup: {
         from: 'address_city_countryAUX',
@@ -64,7 +66,13 @@ mongo.exe nosql --eval "db.customerAUX.aggregate([
     }},
     {\$out:'customer'}
 ])"
+### TODO !!!
+# TODO Agregar address ao staff
+# TODO Agregar address ao store
+##############################
 
+# Agregar category e actors ao film
+    # TODO adicionar o ID da store onde existe
 mongo.exe nosql --eval "db.filmAUX.aggregate([
     {\$lookup: {
         from: 'categoryAUX',
@@ -102,5 +110,11 @@ mongo.exe nosql --eval "db.filmAUX.aggregate([
     }},
     {\$out:'film'}
 ])"
+
+### TODO !!!
+# TODO Agregar payment e film(nome) ao rental
+# TODO Agregar rental ao staff
+# TODO Agregar staff e film(nome)
+
 
 echo " # TERMINADO !!!"

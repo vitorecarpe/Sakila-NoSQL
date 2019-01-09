@@ -69,7 +69,8 @@ OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
 # export table inventory
-select film_id, store_id from inventory
+select inventory_id, film_id, store_id from inventory
+order by inventory_id
 into outfile 'sakila_nosql/csv/inventoryAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -77,27 +78,32 @@ LINES TERMINATED BY '\n';
 
 
 ########## BUSINESS tables ##########
-##### TODO ASAP
-# export table store & staff
-select store.store_id, store.manager_staff_id, store.address_id, store.last_update,
-		staff.staff_id, concat_ws(' ',first_name,last_name), staff.address_id, staff.email, active, username, password, to_base64(picture)
-from store, staff
-where store.store_id = staff.store_id
-into outfile 'sakila_nosql/csv/store_staffAUX.csv'
+# export table store
+select store_id, manager_staff_id, address_id, last_update from store
+into outfile 'sakila_nosql/csv/storeAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
-# export table payment
-select * from payment
-into outfile 'sakila_nosql/csv/paymentAUX.csv'
+# export table staff
+select staff_id, concat_ws(' ',first_name,last_name), address_id, store_id, email, active, username, password, to_base64(picture), last_update from staff
+into outfile 'sakila_nosql/csv/staffAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
 # export table rental
-select * from rental
+select rental_id, rental_date, inventory_id, customer_id, return_date, staff_id, last_update from rental
+order by rental_id
 into outfile 'sakila_nosql/csv/rentalAUX.csv'
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+
+# export table payment
+select rental_id, amount, payment_date from payment
+order by rental_id
+into outfile 'sakila_nosql/csv/paymentAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';

@@ -1,0 +1,19 @@
+Basic schema layout
+
+>Customer
+    >Address
+
+>Film
+    *Category
+    >Actor
+    >Store (ID da store apenas)
+
+>Store
+    >Address
+    *Manager
+    >Staff
+        >Address
+        >Rental
+            *Film (nome/ID? apenas)
+            >Payment
+    >Film (nome/ID? apenas)
