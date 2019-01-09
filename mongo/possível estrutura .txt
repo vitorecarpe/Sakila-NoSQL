@@ -1,7 +1,0 @@
-quanto ao schema, o que me parece melhor é:
--> uma collection "clientes" em que cada document tem apenas embedded o address (e a tabela da city e country passam a ser apenas um atributo do address).
--> uma collection "store" em que cada documment tem embedded o staff.
--> uma collection "rental"
--> uma collection "payment" 
--> uma collection "inventory" (que tem embedded a film_text mas é uma tricky situation)
--> uma collection "film" (passam a ser atributo dele a category e a language desaparecendo as suas tabelas), com os atores embedded

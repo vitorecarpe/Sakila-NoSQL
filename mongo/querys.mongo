@@ -3,7 +3,7 @@
 
 // QUERYS //
 
-// 5 costumers que mais alugueres efetuaram - DONE
+// 5 costumers que mais alugueres efetuaram - DONE ?
 // pode ficar mais rapida (i think)
 db.customer.aggregate([
     {$match: {active:1}},
@@ -25,13 +25,13 @@ db.customer.aggregate([
 ])
 
 
-// 5 costumers que mais filmes alugaram - ON HOLD
+// 5 costumers que mais filmes alugaram - ON HOLD ?
 
 // 5 costumers que mais dinheiro gastaram no serviço
 
 // 5 filmes mais vistos
 
-// 5 staffs que mais dinheiro ganham - DONE
+// 5 staffs que mais dinheiro ganham - DONE ?
 db.staff.aggregate([
     {$match: {active:1}},
     {$lookup: {
@@ -62,9 +62,7 @@ db.staff.aggregate([
 
 
 
-
-// RANDOM STUFF //
-
+////// RANDOM STUFF //////
 // 5 costumers que mais filmes alugaram - quase
 db.customer.aggregate([
     {$match: {active:1}},
@@ -94,65 +92,3 @@ db.customer.aggregate([
     {$sort:{numFilms:-1}}
     // {$limit:20}
 ])
-
-
-
-
-// querys de import
-// NOTE tenho de dar um project melhor em todas as listas embebidas
-// juntar o address embebido no customer
-db.customer2.aggregate([
-    {$lookup: {
-        from: 'address_city_country2',
-        localField: 'address_id',
-        foreignField: 'address_id',
-        as: 'address'
-    }},
-    {$unwind:'$address'},
-    {$project:{
-        "_id":0,
-        "customer_id":1,
-        "name":{$concat:['$first_name',' ','$last_name']},
-        "address":1
-    }},
-    {$out:"customer"}
-])
-
-// juntar a category & actor embebido no film
-// NOTE cada film só tem uma categoria?!? wtf dudes
-db.film2.aggregate([
-    {$lookup: {
-        from: 'category2',
-        localField: 'film_id',
-        foreignField: 'film_id',
-        as: 'category'
-    }},
-    {$unwind:'$category'},
-    {$lookup: {
-        from: 'actor2',
-        localField: 'film_id',
-        foreignField: 'film_id',
-        as: 'actor'
-    }},
-    {$project:{
-        "_id":0,
-        "film_id":1,
-        "title":1,
-        "description":1,
-        "release_year":1,
-        "language":1,
-        "rental_duration":1,
-        "rental_rate":1,
-        "length":1,
-        "replacement_cost":1,
-        "rating":1,
-        "special_features":1,
-            "category":1,
-            "actor":1,
-        "last_update":1
-    }},
-    {$out:"film"}
-])
-
-
-
