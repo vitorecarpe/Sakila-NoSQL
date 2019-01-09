@@ -92,18 +92,24 @@ FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
-# export table rental
-select rental_id, rental_date, inventory_id, customer_id, return_date, staff_id, last_update from rental
+# export table payment & rental
+select r.rental_id, r.rental_date, f.film_id, f.title, p.amount, r.return_date, p.payment_date, 
+		r.inventory_id, r.staff_id, r.customer_id
+from payment as p, rental as r, inventory as i, film as f
+where p.rental_id is not null
+and p.rental_id = r.rental_id
+and r.inventory_id = i.inventory_id
+and i.film_id = f.film_id
 order by rental_id
-into outfile 'sakila_nosql/csv/rentalAUX.csv'
+into outfile 'sakila_nosql/csv/payment_rentalAUX.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';
 
-# export table payment
-select staff_id, customer_id, rental_id, amount, payment_date, last_update from payment
-order by rental_id
-into outfile 'sakila_nosql/csv/paymentAUX.csv'
+# export table other payments
+select payment_id, staff_id, customer_id, amount, payment_date from payment
+where rental_id is null
+into outfile 'sakila_nosql/csv/other_payments.csv'
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n';

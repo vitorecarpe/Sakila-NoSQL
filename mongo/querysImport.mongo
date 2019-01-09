@@ -1,10 +1,7 @@
-// comandos do import
-
-
+// testing
 
 // querys de import
     // NOTE tenho de dar um project melhor em todas as listas embebidas
-    // juntar o address embebido no customer
 db.customer2.aggregate([
     {$lookup: {
         from: 'address_city_country2',
@@ -37,20 +34,8 @@ db.customer2.aggregate([
     {$out:'customer'}
 ])
 
-
-
 db.film.findOne()
-db.film.find({},{"available_store": 1})
-
-
 db.film.aggregate([ 
-    {'$unwind': '$available_store'}, 
-    {'$group': {_id:'$_id', available_stores:{'$addToSet':'$available_store.store_id'}}},
-    {'$project':{_id:1,available_stores:1,nhe:'nhe'}},
-    {'$sort': {'_id.film_id':1}} ])
+    {'$project':{_id:0,film_id:1,available_stores:1,nhe:'nhe'}},
+    {'$sort': {'film_id':1}} ])
 
-db.film.aggregate([ 
-    {'$unwind': '$available_store'}, 
-    {'$group': {_id: {film_id:'$film_id'}, available_stores:{'$addToSet':'$available_store.store_id'}}},
-    {'$project':{_id:1,available_stores:1,nhe:'nhe'}},
-    {'$sort': {'_id.film_id':1}} ])

@@ -1,19 +1,20 @@
 Basic schema layout
 
 >Customer
-    >Address
+    *Address
 
 >Film
-    *Category
+    >Category
     >Actor
     >Store (ID da store apenas)
 
 >Store
-    >Address
+    *Address
     *Manager
     >Staff
-        >Address
+        *Address
         >Rental
+            *Customer (nome/ID apenas)
             *Film (nome/ID? apenas)
             >Payment
     >Film (nome/ID? apenas)

@@ -1,27 +1,14 @@
 #!/bin/bash
 
-# drop database command
-mongo.exe nosql --eval "db.dropDatabase()"
-
 # import documents
 echo " ### INICIO !!!"
-# tabelas individuais automaticas do MySQL
-    # mongoimport.exe --db nosql --type csv --file "./csv/actor.csv" --fields "actor_id","first_name","last_name","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/address.csv" --fields "address_id","address","address2","district","city_id","postal_code","phone","location","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/category.csv" --fields "category_id","name","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/city.csv" --fields "city_id","city","country_id","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/country.csv" --fields "country_id","country","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/customer.csv" --fields "customer_id","store_id","first_name","last_name","email","address_id","active","create_date","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/film.csv" --fields "film_id","title","description","release_year","language_id","original_language_id","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/inventory.csv" --fields "inventory_id","film_id","store_id","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/language.csv" --fields "language_id","name","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/payment.csv" --fields "payment_id","customer_id","staff_id","rental_id","amount","payment_date","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/rental.csv" --fields "rental_id","rental_date","inventory_id","customer_id","return_date","staff_id","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/staff.csv" --fields "staff_id","first_name","last_name","address_id","picture","email","store_id","active","username","password","last_update"
-    # mongoimport.exe --db nosql --type csv --file "./csv/store.csv" --fields "store_id","manager_staff_id","address_id","last_update"
 
-echo " > IMPORTS !!!"
+# drop database command
+echo " >> DROP !!!"
+mongo.exe nosql --eval "db.dropDatabase()"
+
 # Tabelas que sao importadas
+echo " > IMPORTS !!!"
 # Customer
 mongoimport.exe --db nosql --type csv --file "./csv/address_city_countryAUX.csv" --fields "address_id","address","district","postal_code","phone","location","city","country","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/customerAUX.csv" --fields "customer_id","store_id","name","email","address_id","active","create_date","last_update"
@@ -31,15 +18,14 @@ mongoimport.exe --db nosql --type csv --file "./csv/categoryAUX.csv" --fields "c
 mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "actor_name","film_id","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/filmAUX.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
 # Business
-mongoimport.exe --db nosql --type csv --file "./csv/paymentAUX.csv" --fields "staff_id","customer_id","rental_id","amount","payment_date","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/rentalAUX.csv" --fields "rental_id","rental_date","inventory_id","customer_id","return_date","staff_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/other_payments.csv" --fields "payment_id","staff_id","customer_id","amount","payment_date"
+mongoimport.exe --db nosql --type csv --file "./csv/payment_rentalAUX.csv" --fields "rental_id","rental_date","film_id","title","inventory_id","staff_id","customer_id","return_date","staff_id","amount","payment_date"
 mongoimport.exe --db nosql --type csv --file "./csv/staffAUX.csv" --fields "staff_id","staff_name","address_id","store_id","email","active","username","password","picture","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/storeAUX.csv" --fields "store_id","manager_id","address_id","last_update"
 
+# Aqui é onde agregamos algumas tabelas, como atributos ou listas embebidas
 echo " > JOINS !!!"
-# Aqui é onde agregamos algumas tabelas, como atributos embebidos
-
-##### Agregar address #####
+########## Agregar address ##########
 # Agregar address ao customer
 mongo.exe nosql --eval "db.customerAUX.aggregate([
     {\$lookup: {
@@ -126,10 +112,8 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
     }},
     {\$out:'store'}
 ])"
-##############################
-
+########################################
 # Agregar category e actors ao film
-    # TODO adicionar o ID da store onde existe
 mongo.exe nosql --eval "db.filmAUX.aggregate([
     {\$lookup: {
         from: 'categoryAUX',
@@ -172,26 +156,19 @@ mongo.exe nosql --eval "db.filmAUX.aggregate([
     }},
     {\$out:'film'}
 ])"
-
-# db.film.aggregate([ 
-#     {'$unwind': '$available_store'}, 
-#     {'$group': {_id: {film_id:'$film_id'}, available_stores:{'$addToSet':'$available_store.store_id'}}},
-#     {'$sort': {'_id.film_id':1}} ])
-
-
 ### TODO !!!
-# TODO Agregar payment e film(nome) ao rental
 # TODO Agregar rental ao staff
 # TODO Agregar staff e film(nome)
 
-echo " > DELETES !!!"
+
 # Apagar tabelas auxiliares
-# mongo.exe nosql --eval "db.address_city_countryAUX.drop()"
-# mongo.exe nosql --eval "db.customerAUX.drop()"
+echo " > DELETES !!!"
+mongo.exe nosql --eval "db.address_city_countryAUX.drop();
+                        db.customerAUX.drop()"
 # # mongo.exe nosql --eval "db.inventoryAUX.drop()"
-# mongo.exe nosql --eval "db.categoryAUX.drop()"
-# mongo.exe nosql --eval "db.actorAUX.drop()"
-# mongo.exe nosql --eval "db.filmAUX.drop()"
+mongo.exe nosql --eval "db.categoryAUX.drop();
+                        db.actorAUX.drop()"
+mongo.exe nosql --eval "db.filmAUX.drop()"
 
 
 echo " ### TERMINADO !!!"
