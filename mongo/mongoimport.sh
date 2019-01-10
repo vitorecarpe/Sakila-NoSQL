@@ -1,21 +1,25 @@
 #!/bin/bash
 
-# import documents
+# This script uses the CSV files exported in MySQL Workbench,
+# and imports then into mongo documents, in the 'nosql' databse
+
 echo " ### INICIO !!!"
 
-# drop database command
+### drop database command
+# DROPS any possible old files in nosql database
 echo " >> DROP !!!"
 mongo.exe nosql --eval "db.dropDatabase()"
 
-# Tabelas que sao importadas
+### Import documents
+# Here we import all the documents using the CSVs
 echo " > IMPORTS !!!"
 # Customer
 mongoimport.exe --db nosql --type csv --file "./csv/address_city_countryAUX.csv" --fields "address_id","address","district","postal_code","phone","location","city","country","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/customerAUX.csv" --fields "customer_id","store_id","name","email","address_id","active","create_date","last_update"
 # Inventory
 mongoimport.exe --db nosql --type csv --file "./csv/inventoryAUX.csv" --fields "inventory_id","film_id","store_id"
-mongoimport.exe --db nosql --type csv --file "./csv/categoryAUX.csv" --fields "category_name","film_id","last_update"
-mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "actor_name","film_id","last_update"
+mongoimport.exe --db nosql --type csv --file "./csv/categoryAUX.csv" --fields "category_name","film_id"
+mongoimport.exe --db nosql --type csv --file "./csv/actorAUX.csv" --fields "actor_name","film_id"
 mongoimport.exe --db nosql --type csv --file "./csv/filmAUX.csv" --fields "film_id","title","description","release_year","language","rental_duration","rental_rate","length","replacement_cost","rating","special_features","last_update"
 # Business
 mongoimport.exe --db nosql --type csv --file "./csv/other_payments.csv" --fields "payment_id","staff_id","customer_id","amount","payment_date"
@@ -23,10 +27,11 @@ mongoimport.exe --db nosql --type csv --file "./csv/rental.csv" --fields "rental
 mongoimport.exe --db nosql --type csv --file "./csv/staffAUX.csv" --fields "staff_id","staff_name","address_id","store_id","email","active","username","password","picture","last_update"
 mongoimport.exe --db nosql --type csv --file "./csv/storeAUX.csv" --fields "store_id","manager_id","manager_name","address_id","last_update"
 
-# Aqui é onde agregamos algumas tabelas, como atributos ou listas embebidas
+### Aggregations and small changes
+# Here we aggregate some information, using embedded documents and attributes, 
+# Done here, because was easier or unavailable in MySQL
 echo " > JOINS !!!"
-########## Agregar address ##########
-# Agregar address ao customer
+## Agregar address ao customer
 mongo.exe nosql --eval "db.customerAUX.aggregate([
     {\$lookup: {
         from: 'address_city_countryAUX',
@@ -56,7 +61,7 @@ mongo.exe nosql --eval "db.customerAUX.aggregate([
     }},
     {\$out:'customer'}
 ])"
-# Agregar address ao staff
+## Agregar address ao staff
 mongo.exe nosql --eval "db.staffAUX.aggregate([
     {\$lookup: {
         from: 'address_city_countryAUX',
@@ -86,7 +91,7 @@ mongo.exe nosql --eval "db.staffAUX.aggregate([
     }},
     {\$out:'staffAUX'}
 ])"
-# Agregar address ao store
+## Agregar address ao store
 mongo.exe nosql --eval "db.storeAUX.aggregate([
     {\$lookup: {
         from: 'address_city_countryAUX',
@@ -113,8 +118,8 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
     }},
     {\$out:'storeAUX'}
 ])"
-########################################
-# Agregar category e actors e store(ID) ao film
+
+## Agregar category e actors e store(ID) ao film
 mongo.exe nosql --eval "db.filmAUX.aggregate([
     {\$lookup: {
         from: 'categoryAUX',
@@ -157,7 +162,7 @@ mongo.exe nosql --eval "db.filmAUX.aggregate([
     }},
     {\$out:'film'}
 ])"
-# Agregar staff e film(ID) ao store
+## Agregar staff e film(ID) ao store
 mongo.exe nosql --eval "db.storeAUX.aggregate([
     {\$lookup: {
         from: 'staffAUX',
@@ -186,17 +191,18 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
     {\$out:'store'}
 ])"
 
-
-# Apagar tabelas auxiliares
+### Drop AUX documents
+# Some of the initial imported tables got changed, or were only auxiliary
+# Here we delete any unneeded documents left behind
 echo " > DELETES !!!"
 mongo.exe nosql --eval "db.address_city_countryAUX.drop();
                         db.customerAUX.drop()"
 mongo.exe nosql --eval "db.categoryAUX.drop();
-                        db.actorAUX.drop()"
-mongo.exe nosql --eval "db.inventoryAUX.drop();
+                        db.actorAUX.drop();
+                        db.inventoryAUX.drop();
                         db.filmAUX.drop()"
 mongo.exe nosql --eval "db.staffAUX.drop();
                         db.storeAUX.drop()"
 
-
+### Import script finished :D !!!
 echo " ### TERMINADO !!!"
