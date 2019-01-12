@@ -34,6 +34,7 @@ CREATE OR REPLACE TRIGGER actor_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE category (
   category_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -46,6 +47,7 @@ CREATE OR REPLACE TRIGGER category_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE country (
   country_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -58,6 +60,7 @@ CREATE OR REPLACE TRIGGER country_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE city (
   city_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -73,6 +76,7 @@ CREATE OR REPLACE TRIGGER city_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE address (
   address_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -92,6 +96,7 @@ CREATE OR REPLACE TRIGGER address_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE staff (
   staff_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -117,6 +122,7 @@ CREATE OR REPLACE TRIGGER staff_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE store (
   store_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -135,6 +141,7 @@ CREATE OR REPLACE TRIGGER store_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -158,22 +165,25 @@ CREATE OR REPLACE TRIGGER customer_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE film (
-  film_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  film_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   title VARCHAR(255) NOT NULL,
-  description TEXT DEFAULT NULL,
+  description CLOB DEFAULT NULL,
   release_year NUMBER DEFAULT NULL,
-  language_id SMALLINT NOT NULL,
-  original_language_id SMALLINT DEFAULT NULL,
-  rental_duration SMALLINT NOT NULL DEFAULT 3,
-  rental_rate DECIMAL(4,2) NOT NULL DEFAULT 4.99,
-  length SMALLINT DEFAULT NULL,
-  replacement_cost DECIMAL(5,2) NOT NULL DEFAULT 19.99,
-  rating VARCHAR2('G','PG','PG-13','R','NC-17') DEFAULT 'G',
-  special_features VARCHAR2('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') DEFAULT NULL,
+  language_id NUMBER(5,0) NOT NULL,
+  original_language_id NUMBER(5,0) DEFAULT NULL,
+  rental_duration NUMBER(5,0) DEFAULT 3 NOT NULL,
+  rental_rate DECIMAL(4,2) DEFAULT 4.99 NOT NULL,
+  length NUMBER(5,0) DEFAULT NULL,
+  replacement_cost DECIMAL(5,2) DEFAULT 19.99 NOT NULL,
+  rating VARCHAR(10) DEFAULT 'G',
+  special_features VARCHAR(64) DEFAULT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY  (film_id),
+  CHECK(rating IN ('G','PG','PG-13','R','NC-17')),
+  CHECK(special_features IN ('Trailers','Commentaries','Deleted Scenes','Behind the Scenes')),
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
@@ -187,13 +197,13 @@ CREATE OR REPLACE TRIGGER film_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE film_actor (
   actor_id SMALLINT NOT NULL,
   film_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT actor_PK PRIMARY KEY (actor_id),
-  CONSTRAINT film_PK PRIMARY KEY (film_id),
+  CONSTRAINT film_actor_PK PRIMARY KEY (actor_id,film_id),
   CHECK(actor_id > 0),
   CHECK(film_id > 0));
 CREATE INDEX film_actor_film_id_IDX ON film_actor (film_id);
@@ -203,13 +213,13 @@ CREATE OR REPLACE TRIGGER film_actor_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE film_category (
   film_id SMALLINT NOT NULL,
   category_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT film_PK PRIMARY KEY (film_id),
-  CONSTRAINT category_PK PRIMARY KEY (category_id),
+  CONSTRAINT film_category_PK PRIMARY KEY (film_id,category_id),
   CHECK(film_id > 0),
   CHECK(category_id > 0));
 CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
@@ -218,12 +228,13 @@ CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE film_text (
   film_id SMALLINT NOT NULL,
   title VARCHAR(255) NOT NULL,
-  description TEXT,
-  CONSTRAINT film_PK PRIMARY KEY (film_id));
+  description CHAR,
+  CONSTRAINT film_text_PK PRIMARY KEY (film_id));
 CREATE INDEX film_text_title_description_IDX ON film_text (title,description);
 
 CREATE TABLE inventory (
@@ -243,6 +254,7 @@ CREATE OR REPLACE TRIGGER inventory_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE language (
   language_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -256,16 +268,19 @@ CREATE OR REPLACE TRIGGER language_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE payment (
   payment_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
-  customer_id NUMBER(5,0) UNSIGNED NOT NULL,
-  staff_id NUMBER(3,0) UNSIGNED NOT NULL,
+  customer_id NUMBER(5,0) NOT NULL,
+  staff_id NUMBER(3,0) NOT NULL,
   rental_id NUMBER(10,0) DEFAULT NULL,
   amount DECIMAL(5,2) NOT NULL,
   payment_date DATE NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT payment_PK PRIMARY KEY (payment_id));
+  CONSTRAINT payment_PK PRIMARY KEY (payment_id),
+  CHECK(customer_id>0),
+  CHECK(staff_id>0));
 CREATE INDEX payment_staff_id_IDX ON payment (staff_id);
 CREATE INDEX payment_customer_id_IDX ON payment (customer_id);
 CREATE OR REPLACE TRIGGER payment_timestamp_trigger
@@ -274,6 +289,7 @@ CREATE OR REPLACE TRIGGER payment_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE rental (
   rental_id NUMBER(10,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -282,7 +298,7 @@ CREATE TABLE rental (
   customer_id NUMBER(5,0) NOT NULL,
   return_date DATE DEFAULT NULL,
   staff_id NUMBER(3,0) NOT NULL,
-  last_update TIMESTAMP DAFAULT CURRENT_TIMESTAMP,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT rental_PK PRIMARY KEY (rental_id),
   CHECK(inventory_id>0),
   CHECK(customer_id>0),
@@ -297,6 +313,7 @@ CREATE OR REPLACE TRIGGER rental_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 
 -- ------------------------------------------------------------------------------------
