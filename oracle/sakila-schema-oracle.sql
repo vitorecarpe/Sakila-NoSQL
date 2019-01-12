@@ -136,7 +136,7 @@ CREATE OR REPLACE TRIGGER staff_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
+
 
 CREATE INDEX staff_store_id_IDX
 ON staff (store_id);
@@ -163,7 +163,6 @@ CREATE OR REPLACE TRIGGER store_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
 
 CREATE INDEX store_manager_staff_id_IDX
 ON store (manager_staff_id);
@@ -173,6 +172,7 @@ ON store (address_id);
 
 ALTER TABLE staff
 ADD CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id); -- ON DELETE RESTRICT ON UPDATE CASCADE,
+
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -229,29 +229,16 @@ CREATE TABLE film (
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
-  CHECK(length > 0)
-);
-
+  CHECK(length > 0));
 CREATE OR REPLACE TRIGGER film_timestamp_trigger
     BEFORE UPDATE ON film
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
-CREATE INDEX film_title_IDX
-ON film (title);
-
-CREATE INDEX film_language_id_IDX
-ON film (language_id);
-
-CREATE INDEX film_original_language_id_IDX
-ON film (original_language_id);
-
---
--- Table structure for table `film_actor`
---
+CREATE INDEX film_title_IDX ON film (title);
+CREATE INDEX film_language_id_IDX ON film (language_id);
+CREATE INDEX film_original_language_id_IDX ON film (original_language_id);
 
 CREATE TABLE film_actor (
   actor_id SMALLINT NOT NULL,
@@ -262,59 +249,38 @@ CREATE TABLE film_actor (
   CONSTRAINT film_actor_actor_FK FOREIGN KEY (actor_id) REFERENCES actor (actor_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT film_actor_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(actor_id > 0),
-  CHECK(film_id > 0)
-);
-
+  CHECK(film_id > 0));
 CREATE OR REPLACE TRIGGER film_actor_timestamp_trigger
     BEFORE UPDATE ON film_actor
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
-CREATE INDEX film_actor_film_id_IDX
-ON film_actor (film_id);
-
---
--- Table structure for table `film_category`
---
+CREATE INDEX film_actor_film_id_IDX ON film_actor (film_id);
 
 CREATE TABLE film_category (
   film_id SMALLINT NOT NULL,
   category_id SMALLINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY (film_id),
   CONSTRAINT category_PK PRIMARY KEY (category_id),
-  CONSTRAINT fk_film_category_film FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_film_category_category FOREIGN KEY (category_id) REFERENCES category (category_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_category_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_category_category_FK FOREIGN KEY (category_id) REFERENCES category (category_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(film_id > 0),
-  CHECK(category_id > 0)
-);
-
+  CHECK(category_id > 0));
 CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
     BEFORE UPDATE ON film_category
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
---
--- Table structure for table `film_text`
--- 
--- InnoDB added FULLTEXT support in 5.6.10. If you use an
--- earlier version, then consider upgrading (recommended) or 
--- changing InnoDB to MyISAM as the film_text engine
---
 
 CREATE TABLE film_text (
   film_id SMALLINT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  PRIMARY KEY  (film_id),
-  FULLTEXT KEY idx_title_description (title,description)
-);
+  CONSTRAINT film_PK PRIMARY KEY (film_id));
+CREATE INDEX film_text_title_description_IDX ON film_text (title,description);
 
 --
 -- Triggers for loading film_text from film
@@ -325,7 +291,6 @@ CREATE TRIGGER `ins_film` AFTER INSERT ON `film` FOR EACH ROW BEGIN
     INSERT INTO film_text (film_id, title, description)
         VALUES (new.film_id, new.title, new.description);
   END;;
-
 
 CREATE TRIGGER `upd_film` AFTER UPDATE ON `film` FOR EACH ROW BEGIN
     IF (old.title != new.title) OR (old.description != new.description) OR (old.film_id != new.film_id)
@@ -338,57 +303,44 @@ CREATE TRIGGER `upd_film` AFTER UPDATE ON `film` FOR EACH ROW BEGIN
     END IF;
   END;;
 
-
 CREATE TRIGGER `del_film` AFTER DELETE ON `film` FOR EACH ROW BEGIN
     DELETE FROM film_text WHERE film_id = old.film_id;
   END;;
-
 DELIMITER ;
 
 
 CREATE TABLE inventory (
-  inventory_id MEDIUMINT NOT NULL AUTO_INCREMENT,
-  film_id SMALLINT NOT NULL,
-  store_id SMALLINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  inventory_id NUMBER(7, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  film_id NUMBER(5, 0) NOT NULL,
+  store_id NUMBER(3, 0) NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY  (inventory_id),
   CONSTRAINT fk_inventory_store FOREIGN KEY (store_id) REFERENCES store (store_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_inventory_film FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(inventory_id>0),
   CHECK(film_id>0),
-  CHECK(store_id>0)
-);
-
+  CHECK(store_id>0));
 CREATE OR REPLACE TRIGGER inventory_timestamp_trigger
     BEFORE UPDATE ON inventory
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
-CREATE INDEX inventory_film_id_IDX
-ON inventory (film_id);
-
-CREATE INDEX inventory_store_film_id_IDX
-ON inventory (store_id,film_id);
-
-
+CREATE INDEX inventory_film_id_IDX ON inventory (film_id);
+CREATE INDEX inventory_store_film_id_IDX ON inventory (store_id,film_id);
 
 CREATE TABLE language (
-  language_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  language_id NUMBER(5, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   name CHAR(20) NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (language_id)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT language_PK PRIMARY KEY (language_id),
+  CHECK(language_id>0));
 CREATE OR REPLACE TRIGGER language_timestamp_trigger
     BEFORE UPDATE ON language
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
 
 --
 -- Table structure for table `payment`
