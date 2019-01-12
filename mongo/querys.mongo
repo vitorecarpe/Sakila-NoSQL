@@ -1,7 +1,8 @@
 // command to use the project database
 // use nosql
 
-// QUERYS //
+
+////////// QUERYS //////////
 
 // DONE - 5 costumers que mais alugueres efetuaram
 // NOTA: nao estou a comecar no customer, 
@@ -36,10 +37,38 @@ db.rental.aggregate([
 ])
 
 
-// HOLD - 5 costumers que mais filmes alugaram
-// ??? Cada rental (só tem um inventory, e por sua vez) só tem um film, 
-//      logo nRentals=nFilms alugados.
-
+// DONE - 5 costumers que mais filmes (distintos) alugaram
+db.rental.aggregate([
+    {$lookup: {
+        from: 'customer',
+        localField: 'customer_id',
+        foreignField: 'customer_id',
+        as: 'CUSTOMER'
+    }},
+    {$unwind: '$CUSTOMER'},
+    {$project:{
+        _id:0,
+        rental_id:1,
+        customer_id:1,
+        customer_name: "$CUSTOMER.name",
+        active: "$CUSTOMER.active"
+    }},
+    {$match: {active:1}},
+    {$group:{
+        _id:{
+            customer_id:'$customer_id',
+            customer_name:'$customer_name'
+        },
+        setFilms: {$addToSet: '$rental_id'}
+    }},
+    {$project:{
+        _id:1,
+        numberFilms: {$size: '$setFilms'},
+        // setFilms:1
+    }},
+    {$sort:{numberFilms:-1}},
+    {$limit:10}
+])
 
 
 // DONE - 5 costumers que mais dinheiro gastaram no serviço
@@ -132,10 +161,10 @@ db.store.aggregate([
 ])
 
 
-// Clientes que mais tempo demoram a devolver os filmes (média)
+// IN WORK - Clientes que mais tempo demoram a devolver os filmes (média)
 
 
-// Lojas com mais vendas/alugueres feitos
+// DONE - Lojas com mais rentals feitos
 // NOTA: só há 2 stores ._.
 db.rental.aggregate([
     {$group:{
