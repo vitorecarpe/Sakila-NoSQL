@@ -9,6 +9,7 @@ db.film.aggregate([
     {'$sort': {'film_id':1}} ])
 
 
+// outras querys
 db.storeAUX.aggregate([
     {$lookup: {
         from: 'staffAUX',
@@ -40,32 +41,3 @@ db.storeAUX.aggregate([
     }}
 ])
 
-
-
-// query - 5 staffs que mais dinheiro ganham
-db.store.aggregate([
-    {$group:{
-        _id: '$staff.staff_name',
-        active: {$first: '$staff.active'},
-        staff_id: {$first: '$staff.staff_id'}
-    }},
-    {$unwind:"$_id"},
-    {$unwind:"$active"},
-    {$unwind:"$staff_id"},
-    {$match: {active:1}},
-    {$lookup: {
-        from: 'rental',
-        localField: 'staff_id',
-        foreignField: 'staff_id',
-        as: 'RENTALS'
-    }},
-    {$project: {
-        _id:1,
-        staff_id:1,
-        // AMOUNTS:'$RENTALS.amount',
-        TOTAL_AMOUNTS:{$sum:'$RENTALS.amount'},
-        numberPayments: {$size: '$RENTALS'}
-    }},
-    {$sort:{TOTAL_AMOUNTS:-1}},
-    {$limit:5}
-])
