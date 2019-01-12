@@ -17,8 +17,8 @@ db.rental.aggregate([
     {$unwind: '$CUSTOMER'},
     {$project:{
         _id:0,
-        customer_id:1,
         rental_id:1,
+        customer_id:1,
         active: "$CUSTOMER.active"
     }},
     {$match: {active:1}},
@@ -32,11 +32,42 @@ db.rental.aggregate([
 ])
 
 
-// 5 costumers que mais filmes alugaram - ON HOLD ?
+// HOLD - 5 costumers que mais filmes alugaram
+// ??? Cada rental (só tem um inventory, e por sua vez) só tem um film, 
+//      logo nRentals=nFilms alugados.
 
-// 5 costumers que mais dinheiro gastaram no serviço
+
+
+// DONE - 5 costumers que mais dinheiro gastaram no serviço
+db.rental.aggregate([
+    {$lookup: {
+        from: 'customer',
+        localField: 'customer_id',
+        foreignField: 'customer_id',
+        as: 'CUSTOMER'
+    }},
+    {$unwind: '$CUSTOMER'},
+    {$project:{
+        _id:0,
+        rental_id:1,
+        customer_id:1,
+        active: "$CUSTOMER.active",
+        amount:1
+    }},
+    {$match: {active:1}},
+    {$group:{
+        _id: '$customer_id',
+        totalAmount: {$sum: '$amount'},
+        listAmounts: {$push: '$amount'}
+    }},
+    {$sort:{totalAmount:-1}},
+    {$limit:10}
+])
+
 
 // 5 filmes mais vistos
+
+
 
 // DONE - 5 staffs que mais dinheiro ganham
 db.store.aggregate([
