@@ -3,25 +3,32 @@
 
 // QUERYS //
 
-// 5 costumers que mais alugueres efetuaram - DONE ?
-// pode ficar mais rapida (i think)
-db.customer.aggregate([
-    {$match: {active:1}},
+// 5 costumers que mais alugueres efetuaram
+// NOTA: nao estou a comecar no customer, 
+//      pk me esqueci de colocar la uma lista com os IDs das rentals dele, 
+//      com isso deve ficar bem mais rapida a query
+db.rental.aggregate([
     {$lookup: {
-        from: 'rental',
+        from: 'customer',
         localField: 'customer_id',
         foreignField: 'customer_id',
-        as: 'RentalList'
+        as: 'CUSTOMER'
     }},
-    {$project: {
+    {$unwind: '$CUSTOMER'},
+    {$project:{
         _id:0,
-        // customer_id:1,
-        name:{$concat:["$first_name"," ","$last_name"]},
-        // RentalList:{_id:0,rental_id:1,return_date:1},
-        numberOfRentals:{$size:"$RentalList"},
+        customer_id:1,
+        rental_id:1,
+        active: "$CUSTOMER.active"
     }},
-    {$sort:{numberOfRentals:-1}},
-    {$limit:5}
+    {$match: {active:1}},
+    {$group:{
+        _id: '$customer_id',
+        numberRentals: {$sum: 1},
+        listRentals: {$push: '$rental_id'}
+    }},
+    {$sort:{numberRentals:-1}},
+    {$limit:10}
 ])
 
 
@@ -31,7 +38,7 @@ db.customer.aggregate([
 
 // 5 filmes mais vistos
 
-// query - 5 staffs que mais dinheiro ganham - DONE
+// DONE - 5 staffs que mais dinheiro ganham
 db.store.aggregate([
     {$group:{
         _id: '$staff.staff_name',
