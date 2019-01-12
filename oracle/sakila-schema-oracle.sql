@@ -23,7 +23,7 @@ CREATE TABLE actor (
 CREATE INDEX actor_last_name_IDX
 ON actor (last_name);
 
--- TRUGGER QUE RESOLVE OS ON UPDATE CURRENT_TIMESTAMP
+-- TRIGGER QUE RESOLVE OS ON UPDATE CURRENT_TIMESTAMP
 CREATE OR REPLACE TRIGGER actor_timestamp_trigger
     BEFORE UPDATE ON actor
     FOR EACH ROW
@@ -116,12 +116,12 @@ CREATE TABLE staff (
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   address_id SMALLINT NOT NULL,
-  picture BLOB DEFAULT NULL,
+  picture CLOB DEFAULT NULL,
   email VARCHAR(50) DEFAULT NULL,
   store_id SMALLINT NOT NULL,
   active NUMBER(1,0) DEFAULT 1,
   username VARCHAR(16) NOT NULL,
-  password BLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR BLOB NA MAQ VIRTUAL ******************
+  password CLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT staff_PK PRIMARY KEY (staff_id),
   CONSTRAINT staff_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
@@ -136,7 +136,7 @@ CREATE OR REPLACE TRIGGER staff_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
+
 
 CREATE INDEX staff_store_id_IDX
 ON staff (store_id);
@@ -163,7 +163,6 @@ CREATE OR REPLACE TRIGGER store_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
 
 CREATE INDEX store_manager_staff_id_IDX
 ON store (manager_staff_id);
@@ -173,6 +172,7 @@ ON store (address_id);
 
 ALTER TABLE staff
 ADD CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id); -- ON DELETE RESTRICT ON UPDATE CASCADE,
+
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -184,7 +184,7 @@ CREATE TABLE customer (
   active NUMBER(1,0) DEFAULT 1,
   create_date DATE NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT customer_PK PRIMARY KEY  (customer_id),
+  CONSTRAINT customer_PK PRIMARY KEY (customer_id),
   CONSTRAINT customer_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CONSTRAINT customer_store_FK FOREIGN KEY (store_id) REFERENCES store (store_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(address_id > 0),
@@ -209,14 +209,6 @@ CREATE INDEX customer_address_id_IDX
 ON customer (address_id);
 
 
-
---- TUDO FUNCIONA ATÉ AQUI....
-
-
--- TUDO O QUE TA PARA BAIXO AINDA NAO VI...
--- Table structure for table `film`
---
-
 CREATE TABLE film (
   film_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   title VARCHAR(255) NOT NULL,
@@ -230,97 +222,65 @@ CREATE TABLE film (
   replacement_cost DECIMAL(5,2) NOT NULL DEFAULT 19.99,
   rating ENUM('G','PG','PG-13','R','NC-17') DEFAULT 'G',
   special_features SET('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') DEFAULT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT film_PL PRIMARY KEY  (film_id),
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT film_PK PRIMARY KEY  (film_id),
   CONSTRAINT language_FK FOREIGN KEY (language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT language_original_FK FOREIGN KEY (original_language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
-  CHECK(length > 0)
-);
-
+  CHECK(length > 0));
 CREATE OR REPLACE TRIGGER film_timestamp_trigger
     BEFORE UPDATE ON film
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
-CREATE INDEX film_title_IDX
-ON film (title);
-
-CREATE INDEX film_language_id_IDX
-ON film (language_id);
-
-CREATE INDEX film_original_language_id_IDX
-ON film (original_language_id);
-
---
--- Table structure for table `film_actor`
---
+CREATE INDEX film_title_IDX ON film (title);
+CREATE INDEX film_language_id_IDX ON film (language_id);
+CREATE INDEX film_original_language_id_IDX ON film (original_language_id);
 
 CREATE TABLE film_actor (
   actor_id SMALLINT NOT NULL,
   film_id SMALLINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY  (actor_id,film_id),
-  CONSTRAINT fk_film_actor_actor FOREIGN KEY (actor_id) REFERENCES actor (actor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_film_actor_film FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT actor_PK PRIMARY KEY (actor_id),
+  CONSTRAINT film_PK PRIMARY KEY (film_id),
+  CONSTRAINT film_actor_actor_FK FOREIGN KEY (actor_id) REFERENCES actor (actor_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_actor_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(actor_id > 0),
-  CHECK(film_id > 0)
-);
-
+  CHECK(film_id > 0));
 CREATE OR REPLACE TRIGGER film_actor_timestamp_trigger
     BEFORE UPDATE ON film_actor
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
-CREATE INDEX film_actor_film_id_IDX
-ON film_actor (film_id);
-
---
--- Table structure for table `film_category`
---
+CREATE INDEX film_actor_film_id_IDX ON film_actor (film_id);
 
 CREATE TABLE film_category (
   film_id SMALLINT NOT NULL,
-  category_id TINYINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (film_id, category_id),
-  CONSTRAINT fk_film_category_film FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_film_category_category FOREIGN KEY (category_id) REFERENCES category (category_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  category_id SMALLINT NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT film_PK PRIMARY KEY (film_id),
+  CONSTRAINT category_PK PRIMARY KEY (category_id),
+  CONSTRAINT film_category_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_category_category_FK FOREIGN KEY (category_id) REFERENCES category (category_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(film_id > 0),
-  CHECK(category_id > 0)
-);
-
+  CHECK(category_id > 0));
 CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
     BEFORE UPDATE ON film_category
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
---
--- Table structure for table `film_text`
--- 
--- InnoDB added FULLTEXT support in 5.6.10. If you use an
--- earlier version, then consider upgrading (recommended) or 
--- changing InnoDB to MyISAM as the film_text engine
---
 
 CREATE TABLE film_text (
   film_id SMALLINT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  PRIMARY KEY  (film_id),
-  FULLTEXT KEY idx_title_description (title,description)
-);
+  CONSTRAINT film_PK PRIMARY KEY (film_id));
+CREATE INDEX film_text_title_description_IDX ON film_text (title,description);
 
 --
 -- Triggers for loading film_text from film
@@ -331,7 +291,6 @@ CREATE TRIGGER `ins_film` AFTER INSERT ON `film` FOR EACH ROW BEGIN
     INSERT INTO film_text (film_id, title, description)
         VALUES (new.film_id, new.title, new.description);
   END;;
-
 
 CREATE TRIGGER `upd_film` AFTER UPDATE ON `film` FOR EACH ROW BEGIN
     IF (old.title != new.title) OR (old.description != new.description) OR (old.film_id != new.film_id)
@@ -344,39 +303,44 @@ CREATE TRIGGER `upd_film` AFTER UPDATE ON `film` FOR EACH ROW BEGIN
     END IF;
   END;;
 
-
 CREATE TRIGGER `del_film` AFTER DELETE ON `film` FOR EACH ROW BEGIN
     DELETE FROM film_text WHERE film_id = old.film_id;
   END;;
-
 DELIMITER ;
 
---
--- Table structure for table `inventory`
---
 
 CREATE TABLE inventory (
-  inventory_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  film_id SMALLINT UNSIGNED NOT NULL,
-  store_id TINYINT UNSIGNED NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  inventory_id NUMBER(7, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  film_id NUMBER(5, 0) NOT NULL,
+  store_id NUMBER(3, 0) NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY  (inventory_id),
-  KEY idx_fk_film_id (film_id),
-  KEY idx_store_id_film_id (store_id,film_id),
-  CONSTRAINT fk_inventory_store FOREIGN KEY (store_id) REFERENCES store (store_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_inventory_film FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE RESTRICT ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure for table `language`
---
+  CONSTRAINT fk_inventory_store FOREIGN KEY (store_id) REFERENCES store (store_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_inventory_film FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CHECK(inventory_id>0),
+  CHECK(film_id>0),
+  CHECK(store_id>0));
+CREATE OR REPLACE TRIGGER inventory_timestamp_trigger
+    BEFORE UPDATE ON inventory
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+CREATE INDEX inventory_film_id_IDX ON inventory (film_id);
+CREATE INDEX inventory_store_film_id_IDX ON inventory (store_id,film_id);
 
 CREATE TABLE language (
-  language_id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  language_id NUMBER(5, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   name CHAR(20) NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (language_id)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT language_PK PRIMARY KEY (language_id),
+  CHECK(language_id>0));
+CREATE OR REPLACE TRIGGER language_timestamp_trigger
+    BEFORE UPDATE ON language
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
 
 --
 -- Table structure for table `payment`
@@ -389,7 +353,7 @@ CREATE TABLE payment (
   rental_id INT DEFAULT NULL,
   amount DECIMAL(5,2) NOT NULL,
   payment_date DATETIME NOT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY  (payment_id),
   KEY idx_fk_staff_id (staff_id),
   KEY idx_fk_customer_id (customer_id),
@@ -397,6 +361,14 @@ CREATE TABLE payment (
   CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_payment_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE OR REPLACE TRIGGER payment_timestamp_trigger
+    BEFORE UPDATE ON payment
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
 
 
 --
@@ -410,7 +382,7 @@ CREATE TABLE rental (
   customer_id SMALLINT UNSIGNED NOT NULL,
   return_date DATETIME DEFAULT NULL,
   staff_id TINYINT UNSIGNED NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (rental_id),
   UNIQUE KEY  (rental_date,inventory_id,customer_id),
   KEY idx_fk_inventory_id (inventory_id),
@@ -421,6 +393,14 @@ CREATE TABLE rental (
   CONSTRAINT fk_rental_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE OR REPLACE TRIGGER rental_timestamp_trigger
+    BEFORE UPDATE ON rental
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
+
 --
 -- Table structure for table `staff`
 --
@@ -430,87 +410,131 @@ CREATE TABLE rental (
 --
 
 CREATE TABLE store (
-  store_id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  manager_staff_id TINYINT UNSIGNED NOT NULL,
-  address_id SMALLINT UNSIGNED NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY  (store_id),
+  store_id SMALLINT NOT NULL AUTO_INCREMENT,
+  manager_staff_id SMALLINT NOT NULL,
+  address_id SMALLINT NOT NULL,
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT store_PK PRIMARY KEY (store_id),
   UNIQUE KEY idx_unique_manager (manager_staff_id),
   KEY idx_fk_address_id (address_id),
   CONSTRAINT fk_store_staff FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_store_address FOREIGN KEY (address_id) REFERENCES address (address_id) ON DELETE RESTRICT ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  CONSTRAINT fk_store_address FOREIGN KEY (address_id) REFERENCES address (address_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CHECK(store_id>0),
+  CHECK(manager_staff_id>0),
+  CHECK(address_id>0)
+);
+
+CREATE OR REPLACE TRIGGER store_timestamp_trigger
+    BEFORE UPDATE ON store
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
 
 --
 -- View structure for view `customer_list`
 --
 
-CREATE VIEW customer_list
-AS
-SELECT cu.customer_id AS ID, CONCAT(cu.first_name, _utf8' ', cu.last_name) AS name, a.address AS address, a.postal_code AS `zip code`,
-	a.phone AS phone, city.city AS city, country.country AS country, IF(cu.active, _utf8'active',_utf8'') AS notes, cu.store_id AS SID
-FROM customer AS cu JOIN address AS a ON cu.address_id = a.address_id JOIN city ON a.city_id = city.city_id
-	JOIN country ON city.country_id = country.country_id;
+CREATE VIEW customer_list AS
+	SELECT
+		cu.customer_id AS ID,
+		CONCAT(cu.first_name, _utf8' ', cu.last_name) AS name,
+		a.address AS address,
+		a.postal_code AS `zip code`,
+		a.phone AS phone,
+		city.city AS city,
+		country.country AS country,
+		IF(cu.active, _utf8'active',_utf8'') AS notes,
+		cu.store_id AS SID
+	FROM customer AS cu
+		JOIN address AS a ON cu.address_id = a.address_id
+		JOIN city ON a.city_id = city.city_id
+		JOIN country ON city.country_id = country.country_id;
 
 --
 -- View structure for view `film_list`
 --
 
-CREATE VIEW film_list
-AS
-SELECT film.film_id AS FID, film.title AS title, film.description AS description, category.name AS category, film.rental_rate AS price,
-	film.length AS length, film.rating AS rating, GROUP_CONCAT(CONCAT(actor.first_name, _utf8' ', actor.last_name) SEPARATOR ', ') AS actors
-FROM category LEFT JOIN film_category ON category.category_id = film_category.category_id LEFT JOIN film ON film_category.film_id = film.film_id
+CREATE VIEW film_list AS
+	SELECT
+		film.film_id AS FID,
+		film.title AS title,
+		film.description AS description,
+		category.name AS category,
+		film.rental_rate AS price,
+		film.length AS length,
+		film.rating AS rating,
+		GROUP_CONCAT(CONCAT(actor.first_name, _utf8' ', actor.last_name) SEPARATOR ', ') AS actors
+	FROM category
+		LEFT JOIN film_category ON category.category_id = film_category.category_id
+		LEFT JOIN film ON film_category.film_id = film.film_id
         JOIN film_actor ON film.film_id = film_actor.film_id
-	JOIN actor ON film_actor.actor_id = actor.actor_id
-GROUP BY film.film_id, category.name;
+		JOIN actor ON film_actor.actor_id = actor.actor_id
+	GROUP BY film.film_id, category.name;
 
 --
 -- View structure for view `nicer_but_slower_film_list`
 --
 
-CREATE VIEW nicer_but_slower_film_list
-AS
-SELECT film.film_id AS FID, film.title AS title, film.description AS description, category.name AS category, film.rental_rate AS price,
-	film.length AS length, film.rating AS rating, GROUP_CONCAT(CONCAT(CONCAT(UCASE(SUBSTR(actor.first_name,1,1)),
-	LCASE(SUBSTR(actor.first_name,2,LENGTH(actor.first_name))),_utf8' ',CONCAT(UCASE(SUBSTR(actor.last_name,1,1)),
-	LCASE(SUBSTR(actor.last_name,2,LENGTH(actor.last_name)))))) SEPARATOR ', ') AS actors
-FROM category LEFT JOIN film_category ON category.category_id = film_category.category_id LEFT JOIN film ON film_category.film_id = film.film_id
+CREATE VIEW nicer_but_slower_film_list AS
+	SELECT
+		film.film_id AS FID,
+	   	film.title AS title,
+	   	film.description AS description,
+	   	category.name AS category,
+	   	film.rental_rate AS price,
+	   	film.length AS length,
+	   	film.rating AS rating,
+       	GROUP_CONCAT(CONCAT(CONCAT(UCASE(SUBSTR(actor.first_name,1,1)),
+	   		LCASE(SUBSTR(actor.first_name,2,LENGTH(actor.first_name))),_utf8' ',
+	   		CONCAT(UCASE(SUBSTR(actor.last_name,1,1)),
+	   		LCASE(SUBSTR(actor.last_name,2,LENGTH(actor.last_name)))))) SEPARATOR ', ') AS actors
+	FROM category
+		LEFT JOIN film_category ON category.category_id = film_category.category_id
+		LEFT JOIN film ON film_category.film_id = film.film_id
         JOIN film_actor ON film.film_id = film_actor.film_id
-	JOIN actor ON film_actor.actor_id = actor.actor_id
-GROUP BY film.film_id, category.name;
+		JOIN actor ON film_actor.actor_id = actor.actor_id
+	GROUP BY film.film_id, category.name;
 
 --
 -- View structure for view `staff_list`
 --
 
-CREATE VIEW staff_list
-AS
-SELECT s.staff_id AS ID, CONCAT(s.first_name, _utf8' ', s.last_name) AS name, a.address AS address, a.postal_code AS `zip code`, a.phone AS phone,
-	city.city AS city, country.country AS country, s.store_id AS SID
-FROM staff AS s JOIN address AS a ON s.address_id = a.address_id JOIN city ON a.city_id = city.city_id
+CREATE VIEW staff_list AS
+	SELECT
+		s.staff_id AS ID,
+		CONCAT(s.first_name, _utf8' ', s.last_name) AS name,
+		a.address AS address,
+		a.postal_code AS `zip code`,
+		a.phone AS phone,
+		city.city AS city,
+		country.country AS country,
+		s.store_id AS SID
+	FROM staff AS s 
+	JOIN address AS a ON s.address_id = a.address_id
+	JOIN city ON a.city_id = city.city_id
 	JOIN country ON city.country_id = country.country_id;
 
 --
 -- View structure for view `sales_by_store`
 --
 
-CREATE VIEW sales_by_store
-AS
-SELECT
-CONCAT(c.city, _utf8',', cy.country) AS store
-, CONCAT(m.first_name, _utf8' ', m.last_name) AS manager
-, SUM(p.amount) AS total_sales
-FROM payment AS p
-INNER JOIN rental AS r ON p.rental_id = r.rental_id
-INNER JOIN inventory AS i ON r.inventory_id = i.inventory_id
-INNER JOIN store AS s ON i.store_id = s.store_id
-INNER JOIN address AS a ON s.address_id = a.address_id
-INNER JOIN city AS c ON a.city_id = c.city_id
-INNER JOIN country AS cy ON c.country_id = cy.country_id
-INNER JOIN staff AS m ON s.manager_staff_id = m.staff_id
-GROUP BY s.store_id
-ORDER BY cy.country, c.city;
+CREATE VIEW sales_by_store AS
+	SELECT
+		CONCAT(c.city, _utf8',', cy.country) AS store,
+		CONCAT(m.first_name, _utf8' ', m.last_name) AS manager,
+		SUM(p.amount) AS total_sales
+	FROM payment AS p
+	INNER JOIN rental AS r ON p.rental_id = r.rental_id
+	INNER JOIN inventory AS i ON r.inventory_id = i.inventory_id
+	INNER JOIN store AS s ON i.store_id = s.store_id
+	INNER JOIN address AS a ON s.address_id = a.address_id
+	INNER JOIN city AS c ON a.city_id = c.city_id
+	INNER JOIN country AS cy ON c.country_id = cy.country_id
+	INNER JOIN staff AS m ON s.manager_staff_id = m.staff_id
+	GROUP BY s.store_id
+	ORDER BY cy.country, c.city;
 
 --
 -- View structure for view `sales_by_film_category`
@@ -519,19 +543,18 @@ ORDER BY cy.country, c.city;
 -- some titles belong to more than 1 category
 --
 
-CREATE VIEW sales_by_film_category
-AS
-SELECT
-c.name AS category
-, SUM(p.amount) AS total_sales
-FROM payment AS p
-INNER JOIN rental AS r ON p.rental_id = r.rental_id
-INNER JOIN inventory AS i ON r.inventory_id = i.inventory_id
-INNER JOIN film AS f ON i.film_id = f.film_id
-INNER JOIN film_category AS fc ON f.film_id = fc.film_id
-INNER JOIN category AS c ON fc.category_id = c.category_id
-GROUP BY c.name
-ORDER BY total_sales DESC;
+CREATE VIEW sales_by_film_category AS
+	SELECT
+		c.name AS category,
+		SUM(p.amount) AS total_sales
+	FROM payment AS p
+	INNER JOIN rental AS r ON p.rental_id = r.rental_id
+	INNER JOIN inventory AS i ON r.inventory_id = i.inventory_id
+	INNER JOIN film AS f ON i.film_id = f.film_id
+	INNER JOIN film_category AS fc ON f.film_id = fc.film_id
+	INNER JOIN category AS c ON fc.category_id = c.category_id
+	GROUP BY c.name
+	ORDER BY total_sales DESC;
 
 --
 -- View structure for view `actor_info`

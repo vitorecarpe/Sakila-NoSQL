@@ -3,42 +3,41 @@
 
 // testing
 
-// querys de import
-    // NOTE tenho de dar um project melhor em todas as listas embebidas
-db.customer2.aggregate([
-    {$lookup: {
-        from: 'address_city_country2',
-        localField: 'address_id',
-        foreignField: 'address_id',
-        as: 'address'
-    }},
-    {$unwind:'$address'},
-    {$project:{
-        '_id':0,
-        'customer_id':1,
-        'store_id':1,
-        'name':1,
-        'email':1,
-        'active':1,
-        'create_date':1,
-        'address':{
-            // 'address_id':0,
-            'address':1,
-            'district':1,
-            'postal_code':1,
-            'location':1,
-            'city':1,
-            'country':1,
-            'phone':1,
-            'last_update':1
-        },
-        'last_update':1
-    }},
-    {$out:'customer'}
-])
-
 db.film.findOne()
 db.film.aggregate([ 
     {'$project':{_id:0,film_id:1,available_stores:1,nhe:'nhe'}},
     {'$sort': {'film_id':1}} ])
+
+
+// outras querys
+db.storeAUX.aggregate([
+    {$lookup: {
+        from: 'staffAUX',
+        localField: 'store_id',
+        foreignField: 'store_id',
+        as: 'staff'
+    }},
+    {$lookup: {
+        from: 'inventoryAUX',
+        localField: 'store_id',
+        foreignField: 'store_id',
+        as: 'available_films'
+    }},
+    {$unwind:'$staff'},
+    {$unwind:'$available_films'},
+    {$group:{
+        '_id':'$_id',
+        'manager_name':{'$first':'$manager_name'},
+        'staff': {'$addToSet':{
+            staff_name:'$staff.staff_name',
+            email:'$staff.email',
+            active:'$staff.active',
+            username:'$staff.username',
+            password:'$staff.password',
+            last_update:'$staff.last_update',
+            address:'$staff.address',
+        }},
+        'available_films': {'$addToSet':'$available_films.film_id'}
+    }}
+])
 

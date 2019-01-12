@@ -71,6 +71,7 @@ mongo.exe nosql --eval "db.staffAUX.aggregate([
     }},
     {\$unwind:'\$address'},
     {\$project:{
+        'staff_id':1,
         'staff_name':1,
         'store_id':1,
         'email':1,
@@ -185,7 +186,16 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
         'manager_name':{'\$first':'\$manager_name'},
         'last_update':{'\$first':'\$last_update'},
         'address':{'\$first':'\$address'},
-        'staff': {'\$push':'\$actor.actor_name'},
+        'staff': {'\$addToSet':{
+            staff_id:'\$staff.staff_id',
+            staff_name:'\$staff.staff_name',
+            email:'\$staff.email',
+            active:'\$staff.active',
+            username:'\$staff.username',
+            password:'\$staff.password',
+            last_update:'\$staff.last_update',
+            address:'\$staff.address',
+        }},
         'available_films': {'\$addToSet':'\$available_films.film_id'}
     }},
     {\$out:'store'}
