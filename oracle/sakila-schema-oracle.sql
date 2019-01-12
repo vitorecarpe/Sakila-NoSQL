@@ -68,7 +68,6 @@ CREATE TABLE city (
   country_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT city_PK PRIMARY KEY (city_id),
-  CONSTRAINT city_country_FK FOREIGN KEY (country_id) REFERENCES country(country_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(country_id > 0)
 );
 
@@ -93,7 +92,6 @@ CREATE TABLE address (
   phone VARCHAR(20) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT address_PK PRIMARY KEY (address_id),
-  CONSTRAINT address_city_FK FOREIGN KEY (city_id) REFERENCES city(city_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(city_id > 0)
 );
 
@@ -124,7 +122,6 @@ CREATE TABLE staff (
   password CLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT staff_PK PRIMARY KEY (staff_id),
-  CONSTRAINT staff_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
   CHECK(staff_id > 0), 
   CHECK(address_id > 0),
   CHECK(store_id > 0)
@@ -150,12 +147,11 @@ CREATE TABLE store (
   address_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT store_PK PRIMARY KEY (store_id),
-  CONSTRAINT store_staff_FK FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT store_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(store_id > 0),
   CHECK(manager_staff_id > 0),
   CHECK(address_id > 0)
 );
+
 
 CREATE OR REPLACE TRIGGER store_timestamp_trigger
     BEFORE UPDATE ON store
@@ -170,9 +166,6 @@ ON store (manager_staff_id);
 CREATE INDEX store_address_id_IDX
 ON store (address_id);
 
-ALTER TABLE staff
-ADD CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id); -- ON DELETE RESTRICT ON UPDATE CASCADE,
-
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -185,8 +178,6 @@ CREATE TABLE customer (
   create_date DATE NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT customer_PK PRIMARY KEY (customer_id),
-  CONSTRAINT customer_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
-  CONSTRAINT customer_store_FK FOREIGN KEY (store_id) REFERENCES store (store_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(address_id > 0),
   CHECK(store_id > 0)
 );
@@ -224,8 +215,6 @@ CREATE TABLE film (
   special_features SET('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') DEFAULT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY  (film_id),
-  CONSTRAINT language_FK FOREIGN KEY (language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT language_original_FK FOREIGN KEY (original_language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
@@ -246,8 +235,6 @@ CREATE TABLE film_actor (
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT actor_PK PRIMARY KEY (actor_id),
   CONSTRAINT film_PK PRIMARY KEY (film_id),
-  CONSTRAINT film_actor_actor_FK FOREIGN KEY (actor_id) REFERENCES actor (actor_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT film_actor_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(actor_id > 0),
   CHECK(film_id > 0));
 CREATE OR REPLACE TRIGGER film_actor_timestamp_trigger
@@ -264,8 +251,6 @@ CREATE TABLE film_category (
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY (film_id),
   CONSTRAINT category_PK PRIMARY KEY (category_id),
-  CONSTRAINT film_category_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT film_category_category_FK FOREIGN KEY (category_id) REFERENCES category (category_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(film_id > 0),
   CHECK(category_id > 0));
 CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
@@ -315,8 +300,6 @@ CREATE TABLE inventory (
   store_id NUMBER(3, 0) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY  (inventory_id),
-  CONSTRAINT fk_inventory_store FOREIGN KEY (store_id) REFERENCES store (store_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_inventory_film FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(inventory_id>0),
   CHECK(film_id>0),
   CHECK(store_id>0));
@@ -356,10 +339,7 @@ CREATE TABLE payment (
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY  (payment_id),
   KEY idx_fk_staff_id (staff_id),
-  KEY idx_fk_customer_id (customer_id),
-  CONSTRAINT fk_payment_rental FOREIGN KEY (rental_id) REFERENCES rental (rental_id) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_payment_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE
+  KEY idx_fk_customer_id (customer_id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE OR REPLACE TRIGGER payment_timestamp_trigger
@@ -387,10 +367,7 @@ CREATE TABLE rental (
   UNIQUE KEY  (rental_date,inventory_id,customer_id),
   KEY idx_fk_inventory_id (inventory_id),
   KEY idx_fk_customer_id (customer_id),
-  KEY idx_fk_staff_id (staff_id),
-  CONSTRAINT fk_rental_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_rental_inventory FOREIGN KEY (inventory_id) REFERENCES inventory (inventory_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_rental_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE
+  KEY idx_fk_staff_id (staff_id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE OR REPLACE TRIGGER rental_timestamp_trigger
@@ -399,38 +376,6 @@ CREATE OR REPLACE TRIGGER rental_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
-/
-
---
--- Table structure for table `staff`
---
-
---
--- Table structure for table `store`
---
-
-CREATE TABLE store (
-  store_id SMALLINT NOT NULL AUTO_INCREMENT,
-  manager_staff_id SMALLINT NOT NULL,
-  address_id SMALLINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT store_PK PRIMARY KEY (store_id),
-  UNIQUE KEY idx_unique_manager (manager_staff_id),
-  KEY idx_fk_address_id (address_id),
-  CONSTRAINT fk_store_staff FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_store_address FOREIGN KEY (address_id) REFERENCES address (address_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CHECK(store_id>0),
-  CHECK(manager_staff_id>0),
-  CHECK(address_id>0)
-);
-
-CREATE OR REPLACE TRIGGER store_timestamp_trigger
-    BEFORE UPDATE ON store
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-/
 
 --
 -- View structure for view `customer_list`
