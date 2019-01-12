@@ -3,7 +3,7 @@
 
 // QUERYS //
 
-// 5 costumers que mais alugueres efetuaram
+// DONE - 5 costumers que mais alugueres efetuaram
 // NOTA: nao estou a comecar no customer, 
 //      pk me esqueci de colocar la uma lista com os IDs das rentals dele, 
 //      com isso deve ficar bem mais rapida a query
@@ -19,11 +19,15 @@ db.rental.aggregate([
         _id:0,
         rental_id:1,
         customer_id:1,
+        customer_name: "$CUSTOMER.name",
         active: "$CUSTOMER.active"
     }},
     {$match: {active:1}},
     {$group:{
-        _id: '$customer_id',
+        _id:{
+            customer_id:'$customer_id',
+            customer_name:'$customer_name'
+        },
         numberRentals: {$sum: 1},
         listRentals: {$push: '$rental_id'}
     }},
@@ -51,12 +55,16 @@ db.rental.aggregate([
         _id:0,
         rental_id:1,
         customer_id:1,
+        customer_name: "$CUSTOMER.name",
         active: "$CUSTOMER.active",
         amount:1
     }},
     {$match: {active:1}},
     {$group:{
-        _id: '$customer_id',
+        _id: {
+            customer_id:'$customer_id',
+            customer_name:'$customer_name'
+        },
         totalAmount: {$sum: '$amount'},
         listAmounts: {$push: '$amount'}
     }},
@@ -65,7 +73,25 @@ db.rental.aggregate([
 ])
 
 
-// 5 filmes mais vistos
+// DONE - 5 filmes mais vistos
+db.rental.aggregate([
+    {$project:{
+        _id:0,
+        rental_id:1,
+        film_id:1,
+        film_title:1,
+    }},
+    {$group:{
+        _id: {
+            film_id: '$film_id',
+            filmTitle: '$film_title'
+        },
+        nRentals: {$sum: 1},
+        listAmounts: {$push: '$rental_id'}
+    }},
+    {$sort:{nRentals:-1}},
+    {$limit:10}
+])
 
 
 
