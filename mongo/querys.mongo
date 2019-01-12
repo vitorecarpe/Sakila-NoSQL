@@ -132,42 +132,19 @@ db.store.aggregate([
 ])
 
 
-// Ator que o costumer X mais viu
-
 // Clientes que mais tempo demoram a devolver os filmes (média)
 
-// Lojas com mais vendas/alugueres pronto
 
-
-
-
-////// RANDOM STUFF //////
-// 5 costumers que mais filmes alugaram - quase
-db.customer.aggregate([
-    {$match: {active:1}},
-    {$lookup: {
-        from: 'rental',
-        localField: 'customer_id',
-        foreignField: 'customer_id',
-        as: 'RentalList'}
-    },
-    {$lookup: {
-        from: 'inventory',
-        localField: 'RentalList.inventory_id',
-        foreignField: 'inventory_id',
-        as: 'INVENTARIO'}
-    },
-    {$project: {
-        _id:0,
-        // customer_id:1,
-        first_name:1,
-        // RentalList:{_id:0,rental_id:1,return_date:1},
-        numRentals:{$size:"$RentalList"},
-        // INVENTARIO:{inventory_id:1,film_id:1},
-        // numInventorys:{$size:"$INVENTARIO"},
-        // 'INVENTARIO.film_id':1,
-        numFilms:{$size:"$INVENTARIO"},
+// Lojas com mais vendas/alugueres feitos
+// NOTA: só há 2 stores ._.
+db.rental.aggregate([
+    {$group:{
+        _id:{
+            store_id:'$store_id',
+        },
+        numberRentals: {$sum: 1},
+        // listRentals: {$push: '$rental_id'}
     }},
-    {$sort:{numFilms:-1}}
-    // {$limit:20}
+    {$sort:{numberRentals:-1}},
+    {$limit:10}
 ])
