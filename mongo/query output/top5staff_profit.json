@@ -1,2 +1,2 @@
-{ "_id" : "Jon Stephens", "staff_id" : 2, "TOTAL_AMOUNTS" : 33881.94, "numberPayments" : 8004 }
-{ "_id" : "Mike Hillyer", "staff_id" : 1, "TOTAL_AMOUNTS" : 33524.62, "numberPayments" : 8040 }
+{ "_id" : { "staff_id" : 2, "staff_name" : "Jon Stephens" }, "totalAmount" : 33881.94, "numberAmounts" : 8004 }
+{ "_id" : { "staff_id" : 1, "staff_name" : "Mike Hillyer" }, "totalAmount" : 33524.62, "numberAmounts" : 8040 }

@@ -94,35 +94,42 @@ db.rental.aggregate([
 ])
 
 
-
 // DONE - 5 staffs que mais dinheiro ganham
+// NOTA: só há 2 staffs ._.
 db.store.aggregate([
-    {$group:{
-        _id: '$staff.staff_name',
-        active: {$first: '$staff.active'},
-        staff_id: {$first: '$staff.staff_id'}
+    {$project:{
+        _id:0,
+        store_id:1,
+        staff:{
+            staff_id:1,
+            staff_name:1,
+            active:1
+        }
     }},
-    {$unwind:"$_id"},
-    {$unwind:"$active"},
-    {$unwind:"$staff_id"},
-    {$match: {active:1}},
+    {$unwind: '$staff'},
+    {$match: {'staff.active':1}},
+    {$group:{
+        _id: {
+            staff_id: '$staff.staff_id',
+            staff_name: '$staff.staff_name',
+        },
+    }},
     {$lookup: {
         from: 'rental',
-        localField: 'staff_id',
+        localField: '_id.staff_id',
         foreignField: 'staff_id',
         as: 'RENTALS'
     }},
-    {$project: {
-        _id:1,
-        staff_id:1,
-        // AMOUNTS:'$RENTALS.amount',
-        TOTAL_AMOUNTS:{$sum:'$RENTALS.amount'},
-        numberPayments: {$size: '$RENTALS'}
+    {$unwind: '$RENTALS'},
+    {$group:{
+        _id: '$_id',
+        totalAmount: {$sum: '$RENTALS.amount'},
+        numberAmounts: {$sum: 1},
+        // listAmounts: {$push: '$RENTALS.amount'}
     }},
-    {$sort:{TOTAL_AMOUNTS:-1}},
-    {$limit:5}
+    {$sort:{totalAmount:-1}},
+    {$limit:10}
 ])
-
 
 
 // Ator que o costumer X mais viu
