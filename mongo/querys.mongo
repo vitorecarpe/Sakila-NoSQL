@@ -31,26 +31,34 @@ db.customer.aggregate([
 
 // 5 filmes mais vistos
 
-// 5 staffs que mais dinheiro ganham - DONE ?
-db.staff.aggregate([
+// query - 5 staffs que mais dinheiro ganham - DONE
+db.store.aggregate([
+    {$group:{
+        _id: '$staff.staff_name',
+        active: {$first: '$staff.active'},
+        staff_id: {$first: '$staff.staff_id'}
+    }},
+    {$unwind:"$_id"},
+    {$unwind:"$active"},
+    {$unwind:"$staff_id"},
     {$match: {active:1}},
     {$lookup: {
-        from: 'payment',
+        from: 'rental',
         localField: 'staff_id',
         foreignField: 'staff_id',
-        as: 'PAYMENTS'
+        as: 'RENTALS'
     }},
     {$project: {
-        _id:0,
-        // staff_id:1,
-        name:{$concat:["$first_name"," ","$last_name"]},
-        // PAYMENTS:{_id:0,rental_id:1,return_date:1},
-        numberPayments:{$size:"$PAYMENTS"},
-        totalMoneyPayments:{$sum:"$PAYMENTS.amount"},
+        _id:1,
+        staff_id:1,
+        // AMOUNTS:'$RENTALS.amount',
+        TOTAL_AMOUNTS:{$sum:'$RENTALS.amount'},
+        numberPayments: {$size: '$RENTALS'}
     }},
-    {$sort:{numberOfRentals:-1}},
+    {$sort:{TOTAL_AMOUNTS:-1}},
     {$limit:5}
 ])
+
 
 
 // Ator que o costumer X mais viu
