@@ -103,12 +103,12 @@ CREATE TABLE staff (
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   address_id SMALLINT NOT NULL,
-  picture CLOB DEFAULT NULL,
+  picture BLOB DEFAULT NULL,
   email VARCHAR(50) DEFAULT NULL,
   store_id SMALLINT NOT NULL,
   active NUMBER(1,0) DEFAULT 1,
   username VARCHAR(16) NOT NULL,
-  password CLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
+  password BLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT staff_PK PRIMARY KEY (staff_id),
   CHECK(staff_id > 0), 
@@ -183,7 +183,6 @@ CREATE TABLE film (
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY  (film_id),
   CHECK(rating IN ('G','PG','PG-13','R','NC-17')),
-  CHECK(special_features IN ('Trailers','Commentaries','Deleted Scenes','Behind the Scenes')),
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
@@ -233,9 +232,8 @@ CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
 CREATE TABLE film_text (
   film_id SMALLINT NOT NULL,
   title VARCHAR(255) NOT NULL,
-  description CHAR,
+  description CLOB,
   CONSTRAINT film_text_PK PRIMARY KEY (film_id));
-CREATE INDEX film_text_title_description_IDX ON film_text (title,description);
 
 CREATE TABLE inventory (
   inventory_id NUMBER(7,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
