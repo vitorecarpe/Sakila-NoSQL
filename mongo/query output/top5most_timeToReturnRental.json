@@ -1,0 +1,10 @@
+{ "_id" : { "customer_id" : 187, "customer_name" : "BRITTANY RILEY" }, "avgReturnSeconds" : 557918.5714285715, "avgReturnDays" : 6.457390873015874 }
+{ "_id" : { "customer_id" : 321, "customer_name" : "KEVIN SCHULER" }, "avgReturnSeconds" : 550592.7272727273, "avgReturnDays" : 6.37260101010101 }
+{ "_id" : { "customer_id" : 539, "customer_name" : "MATHEW BOLIN" }, "avgReturnSeconds" : 545997.2727272727, "avgReturnDays" : 6.319412878787879 }
+{ "_id" : { "customer_id" : 436, "customer_name" : "TROY QUIGLEY" }, "avgReturnSeconds" : 544186, "avgReturnDays" : 6.298449074074074 }
+{ "_id" : { "customer_id" : 532, "customer_name" : "NEIL RENNER" }, "avgReturnSeconds" : 543574.8387096775, "avgReturnDays" : 6.291375448028674 }
+{ "_id" : { "customer_id" : 427, "customer_name" : "JESUS MCCARTNEY" }, "avgReturnSeconds" : 538025, "avgReturnDays" : 6.227141203703703 }
+{ "_id" : { "customer_id" : 555, "customer_name" : "DWIGHT LOMBARDI" }, "avgReturnSeconds" : 528515.2941176471, "avgReturnDays" : 6.1170751633986935 }
+{ "_id" : { "customer_id" : 448, "customer_name" : "MIGUEL BETANCOURT" }, "avgReturnSeconds" : 526431.1111111111, "avgReturnDays" : 6.09295267489712 }
+{ "_id" : { "customer_id" : 453, "customer_name" : "CALVIN MARTEL" }, "avgReturnSeconds" : 524593.0434782609, "avgReturnDays" : 6.071678743961352 }
+{ "_id" : { "customer_id" : 508, "customer_name" : "MILTON HOWLAND" }, "avgReturnSeconds" : 523802.5, "avgReturnDays" : 6.062528935185185 }
