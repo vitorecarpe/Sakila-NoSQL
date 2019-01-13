@@ -72,7 +72,7 @@ mycursor_mysql = connectionMySQL.cursor()
 # for row in city_data_rows:
 #         mycursor_oracle.execute("insert into city(city, country_id, last_update) values ('" +  str(row[1]) + "', '" + str(row[2]) +"', TO_DATE('" + str(row[3]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
-# ADDRESS                   
+# # ADDRESS                   
 # print("EXPORTING ADDRESS TABLE")
 # mycursor_mysql.execute(
 #                 "select * from address"
@@ -83,119 +83,171 @@ mycursor_mysql = connectionMySQL.cursor()
 # for row in address_data_rows:
 #     mycursor_oracle.execute("insert into address(address, district, city_id, postal_code, phone, last_update) values ('" +  str(row[1]) + "', '"  + str(row[3]) + "', '" + str(row[4]) + "', '" + str(row[5]) + "', '" + str(row[6]) + "', TO_DATE('" + str(row[8]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
-# STAFF    ****************************************** faltam os binários ************************************************************
-mycursor_mysql.execute(
-                "select * from staff"
-            )
-
-staff_data_rows = mycursor_mysql.fetchall()
-
-for row in staff_data_rows:
-    #print(row[4])
-    if type(row[4]) is bytes and type(row[9]) is bytearray:
-        print(type(row[9])) 
-        #mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', '" + row[4].getValue() + "', '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) + "', '" + row[9].getValue() + "', TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
-        #aux = row[4].decode("unicode")
-    else:
-        mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, email, store_id, active, username, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) +  "', TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
-    #aux = bytes(row[4])
-    #aux = binascii.b2a_qp(aux, quotetabs=False, istext=True, header=False)
-    #print(row[3])
-    #mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_uodate) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', hextoraw('" + (row[4]) + "'), '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) + "', hextoraw('" + (row[9]) + "'), TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # CUSTOMER
-# mycursor_mysql.execute(
-#                 "select * from customer"
-#             )
-
-# customer_data = mycursor_mysql.fetchall()
-
-
 # # STORE
+# print("EXPORTING STORE TABLE")
 # mycursor_mysql.execute(
 #                 "select * from store"
 #             )
 
-# store_data = mycursor_mysql.fetchall()
+# store_data_rows = mycursor_mysql.fetchall()
 
+# for row in store_data_rows:
+#     mycursor_oracle.execute("insert into store(manager_staff_id, address_id, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) +  "', TO_DATE('" + str(row[3]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
-# # PAYMENT
+# # CUSTOMER
+# print("EXPORTING CUSTOMER TABLE")
 # mycursor_mysql.execute(
-#                 "select * from payment"
+#                 "select * from customer"
 #             )
 
-# payment_data = mycursor_mysql.fetchall()
+# customer_data_rows = mycursor_mysql.fetchall()
 
+# for row in customer_data_rows:
+#     mycursor_oracle.execute("insert into customer(store_id, first_name, last_name, email, address_id, active, create_date, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', '" + str(row[4]) + "', '" + str(row[5]) + "', '" + str(row[6]) + "', TO_DATE('" + str(row[7]) + "', 'yyyy/mm/dd hh24:mi:ss')" + ", TO_DATE('" + str(row[8]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+# # FILM_ACTOR
+# print("EXPORTING FILM_ACTOR TABLE")
+# mycursor_mysql.execute(
+#                 "select * from film_actor"
+#             )
+
+# film_actor_data_rows = mycursor_mysql.fetchall()
+
+# for row in film_actor_data_rows:
+#     mycursor_oracle.execute("insert into film_actor(actor_id, film_id, last_update) values ('" + str(row[0]) + "', '" + str(row[1]) +  "', TO_DATE('" + str(row[2]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+# # FILM_CATEGORY
+# print("EXPORTING FILM_CATEGORY TABLE")
+# mycursor_mysql.execute(
+#                 "select * from film_category"
+#             )
+
+# film_category_data_rows = mycursor_mysql.fetchall()
+
+# for row in film_category_data_rows:
+#     mycursor_oracle.execute("insert into film_category(film_id, category_id, last_update) values ('" + str(row[0]) + "', '" + str(row[1]) + "', TO_DATE('" + str(row[2]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+# # INVENTORY
+# print("EXPORTING INVENTORY TABLE")
+# mycursor_mysql.execute(
+#                 "select * from inventory"
+#             )
+
+# inventory_data_rows = mycursor_mysql.fetchall()
+
+# for row in inventory_data_rows:
+#     mycursor_oracle.execute("insert into inventory(film_id, store_id, last_update) values ('" + str(row[1]) + "', '" + str(row[2]) + "', TO_DATE('" + str(row[3]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+# # LANGUAGE
+# print("EXPORTING LANGUAGE TABLE")
+# mycursor_mysql.execute(
+#                 "select * from language"
+#             )
+
+# language_data_rows = mycursor_mysql.fetchall()
+
+# for row in language_data_rows:
+#     mycursor_oracle.execute("insert into language(name, last_update) values ('" + str(row[1]) + "', TO_DATE('" + str(row[2]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
 # # RENTAL
+# print("EXPORTING RENTAL TABLE")
 # mycursor_mysql.execute(
 #                 "select * from rental"
 #             )
 
-# rental_data = mycursor_mysql.fetchall()
+# rental_data_rows = mycursor_mysql.fetchall()
 
+# for row in rental_data_rows:
+#     print("insert into rental(rental_date, inventory_id, customer_id, return_date, staff_id, last_update) values (" + "TO_DATE('" + str(row[1]) + "', 'yyyy/mm/dd hh24:mi:ss'), '" + str(row[2]) + "', '" + str(row[3]) + "', " + "TO_DATE('" + str(row[4]) + "', 'yyyy/mm/dd hh24:mi:ss'), '" + str(row[5]) + "', " + "TO_DATE('" + str(row[6]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+#     print(row)
+#     mycursor_oracle.execute("insert into rental(rental_date, inventory_id, customer_id, return_date, staff_id, last_update) values (" + "TO_DATE('" + str(row[1]) + "', 'yyyy/mm/dd hh24:mi:ss'), '" + str(row[2]) + "', '" + str(row[3]) + "', " + "TO_DATE('" + str(row[4]) + "', 'yyyy/mm/dd hh24:mi:ss'), '" + str(row[5]) + "', " + "TO_DATE('" + str(row[6]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+# # PAYMENT (NESTE CASO, TEMOS DE MANDAR OS COMANDOS SQL PARA UM FICHEIRO, IR A CONSOLA DO ORACLE, COLAR E EXECUTAR)
+# #                                                       DEVIDO A LIMITAÇÕES DO PYTHON
+# print("EXPORTING PAYMENT TABLE")
+# mycursor_mysql.execute(
+#                 "select * from payment"
+#             )
+
+# payment_data_rows = mycursor_mysql.fetchall()
+
+# for row in payment_data_rows:
+#     print("insert into payment(customer_id, staff_id, rental_id, amount, payment_date, last_update) values ('" + str(row[1]) + "', '" + str(row[2]) + "', '" + str(row[3]) + "', '" + str(row[4]).replace('.',',') + "', " + "TO_DATE('" + str(row[5]) + "', 'yyyy/mm/dd hh24:mi:ss'), " + "TO_DATE('" + str(row[6]) + "', 'yyyy/mm/dd hh24:mi:ss'));")
+#     #mycursor_oracle.execute("insert into payment(customer_id, staff_id, rental_id, amount, payment_date, last_update) values ('" + str(row[1]) + "', '" + str(row[2]) + "', '" + str(row[3]) + "', '" + str(row[4]).replace('.',',') + "', " + "TO_DATE('" + str(row[5]) + "', 'yyyy/mm/dd hh24:mi:ss'), " + "TO_DATE('" + str(row[6]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# *********************************** NÃO TESTADO ***************************************
+
+
+
+
+
+# # STAFF    ****************************************** faltam os binários ************************************************************
+# mycursor_mysql.execute(
+#                 "select * from staff"
+#             )
+
+# staff_data_rows = mycursor_mysql.fetchall()
+
+# for row in staff_data_rows:
+#     #print(row[4])
+#     if type(row[4]) is bytes and type(row[9]) is bytearray:
+#         print(type(row[9])) 
+#         #mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', '" + row[4].getValue() + "', '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) + "', '" + row[9].getValue() + "', TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+#         #aux = row[4].decode("unicode")
+#     else:
+#         mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, email, store_id, active, username, last_update) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) +  "', TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+#     #aux = bytes(row[4])
+#     #aux = binascii.b2a_qp(aux, quotetabs=False, istext=True, header=False)
+#     #print(row[3])
+#     #mycursor_oracle.execute("insert into staff(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_uodate) values ('" +  str(row[1]) + "', '"  + str(row[2]) + "', '" + str(row[3]) + "', hextoraw('" + (row[4]) + "'), '" + str(row[5]) + "', '" + str(row[6])  + "', '" + str(row[7]) + "', '" + str(row[8]) + "', hextoraw('" + (row[9]) + "'), TO_DATE('" + str(row[10]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
 # # FILM
 # mycursor_mysql.execute(
 #                 "select * from film"
 #             )
 
-# film_data = mycursor_mysql.fetchall()
+# film_data_rows = mycursor_mysql.fetchall()
 
-# # FILM_CATEGORY
-# mycursor_mysql.execute(
-#                 "select * from film_category"
-#             )
+# for row in film_data_rows:
+#     print("insert into film(title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update) values ('" + str(row[1]) + "', '" + str(row[2]) + "', TO_DATE('" + str(row[3]) + "', 'yyyy/mm/dd hh24:mi:ss')" + ", '" + str(row[4]) + "', '" + str(row[5]) + "', '" + str(row[6]) + "', '" + str(row[7]) + "', '" + str(row[8]) + "', '" + str(row[9]) + "', '" + str(row[10]) + "', " + str(row[11]) + ", TO_DATE('" + str(row[12]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
+#     #mycursor_oracle.execute("insert into film(title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update) values ('" + str(row[1]) + "', '" + str(row[2]) + "', TO_DATE('" + str(row[3]) + "', 'yyyy/mm/dd hh24:mi:ss')" + ", '" + str(row[4]) + "', '" + str(row[5]) + "', '" + str(row[6]) + "', '" + str(row[7]) + "', '" + str(row[8]) + "', '" + str(row[9]) + "', '" + str(row[10]) + "', " + str(row[11]) + ", TO_DATE('" + str(row[12]) + "', 'yyyy/mm/dd hh24:mi:ss'))")
 
-# film_category_data = mycursor_mysql.fetchall()
-
-# # LANGUAGE
-# mycursor_mysql.execute(
-#                 "select * from language"
-#             )
-
-# language_data = mycursor_mysql.fetchall()
-
-# # FILM_ACTOR
-# mycursor_mysql.execute(
-#                 "select * from film_actor"
-#             )
-
-# film_actor_data = mycursor_mysql.fetchall()
-
-# # INVENTORY
-# mycursor_mysql.execute(
-#                 "select * from inventory"
-#             )
-
-# inventory_data = mycursor_mysql.fetchall()
 
 # # FILM_TEXT
+# print("EXPORTING FILM_TEXT TABLE")
 # mycursor_mysql.execute(
 #                 "select * from film_text"
 #             )
 
-# film_text_data = mycursor_mysql.fetchall()
+# film_text_data_rows = mycursor_mysql.fetchall()
 
+# for row in film_text_data_rows:
+#     mycursor_oracle.execute("insert into film_text(film_id, title, description) values ('" + str(row[0]) + "', '" + str(row[1]) + "', '" + str(row[2]) + "')")
 
 
 
