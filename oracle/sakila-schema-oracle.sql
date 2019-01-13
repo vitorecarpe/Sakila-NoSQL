@@ -11,19 +11,23 @@ drop table city;
 drop table country;
 
 
+-- NOTAS: 
+--
+-- verfificar se precisamos de fazer alguma coisa para o caso do ON DELETE RESTRICT
+-- (supostamente esta sintax representa o que já é o comportamento normal de uma
+-- chave estrangeira, que é não poder eliminar o pai se existirem filhos)
+--
+-- perguntar se vale a pena implementar o ON UPDATE CASCADE porque na verdade as
+-- chaves primárias não devem ser alteradas
+
 
 CREATE TABLE actor (
   actor_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT actor_PK PRIMARY KEY (actor_id)
-);
-
-CREATE INDEX actor_last_name_IDX
-ON actor (last_name);
-
--- TRIGGER QUE RESOLVE OS ON UPDATE CURRENT_TIMESTAMP
+  CONSTRAINT actor_PK PRIMARY KEY (actor_id));
+CREATE INDEX actor_last_name_IDX ON actor (last_name);
 CREATE OR REPLACE TRIGGER actor_timestamp_trigger
     BEFORE UPDATE ON actor
     FOR EACH ROW
@@ -36,9 +40,7 @@ CREATE TABLE category (
   category_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   name VARCHAR(25) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT category_PK PRIMARY KEY (category_id)
-);
-
+  CONSTRAINT category_PK PRIMARY KEY (category_id));
 CREATE OR REPLACE TRIGGER category_timestamp_trigger
     BEFORE UPDATE ON category
     FOR EACH ROW
@@ -51,9 +53,7 @@ CREATE TABLE country (
   country_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   country VARCHAR(50) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT country_PK PRIMARY KEY (country_id)
-);
-
+  CONSTRAINT country_PK PRIMARY KEY (country_id));
 CREATE OR REPLACE TRIGGER country_timestamp_trigger
     BEFORE UPDATE ON country
     FOR EACH ROW
@@ -68,13 +68,8 @@ CREATE TABLE city (
   country_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT city_PK PRIMARY KEY (city_id),
-  CONSTRAINT city_country_FK FOREIGN KEY (country_id) REFERENCES country(country_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
-  CHECK(country_id > 0)
-);
-
-CREATE INDEX city_country_id_IDX
-ON city (country_id);
-
+  CHECK(country_id > 0));
+CREATE INDEX city_country_id_IDX ON city (country_id);
 CREATE OR REPLACE TRIGGER city_timestamp_trigger
     BEFORE UPDATE ON city
     FOR EACH ROW
@@ -93,16 +88,8 @@ CREATE TABLE address (
   phone VARCHAR(20) NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT address_PK PRIMARY KEY (address_id),
-  CONSTRAINT address_city_FK FOREIGN KEY (city_id) REFERENCES city(city_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
-  CHECK(city_id > 0)
-);
-
--- NOTA: 
--- verfificar se precisamos de fazer alguma coisa para o caso do ON DELETE RESTRICT (supostamente esta sintax representa o que já é o comportamento normal de uma chave estrangeira, que é não poder eliminar o pai se existirem filhos)
--- perguntar se vale a pena implementar o ON UPDATE CASCADE porque na verdade as chaves primárias não devem ser alteradas
-CREATE INDEX address_city_id_IDX
-ON address (city_id);
-
+  CHECK(city_id > 0));
+CREATE INDEX address_city_id_IDX ON address (city_id);
 CREATE OR REPLACE TRIGGER address_timestamp_trigger
     BEFORE UPDATE ON address
     FOR EACH ROW
@@ -116,33 +103,26 @@ CREATE TABLE staff (
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   address_id SMALLINT NOT NULL,
-  picture CLOB DEFAULT NULL,
+  picture BLOB DEFAULT NULL,
   email VARCHAR(50) DEFAULT NULL,
   store_id SMALLINT NOT NULL,
   active NUMBER(1,0) DEFAULT 1,
   username VARCHAR(16) NOT NULL,
-  password CLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
+  password BLOB DEFAULT NULL, -- O ORACLE NAO ACEITA VARCHAR BINARY... QUE ALTERNATIVAS HÁ??? ************* TESTAR CLOB NA MAQ VIRTUAL ******************
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT staff_PK PRIMARY KEY (staff_id),
-  CONSTRAINT staff_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
   CHECK(staff_id > 0), 
   CHECK(address_id > 0),
-  CHECK(store_id > 0)
-);
-
+  CHECK(store_id > 0));
+CREATE INDEX staff_store_id_IDX ON staff (store_id);
+CREATE INDEX staff_address_id_IDX ON staff (address_id);
 CREATE OR REPLACE TRIGGER staff_timestamp_trigger
     BEFORE UPDATE ON staff
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-
-
-CREATE INDEX staff_store_id_IDX
-ON staff (store_id);
-
-CREATE INDEX staff_address_id_IDX
-ON staff (address_id);
+/
 
 CREATE TABLE store (
   store_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -150,29 +130,18 @@ CREATE TABLE store (
   address_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT store_PK PRIMARY KEY (store_id),
-  CONSTRAINT store_staff_FK FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT store_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
   CHECK(store_id > 0),
   CHECK(manager_staff_id > 0),
-  CHECK(address_id > 0)
-);
-
+  CHECK(address_id > 0));
+CREATE INDEX store_manager_staff_id_IDX ON store (manager_staff_id);
+CREATE INDEX store_address_id_IDX ON store (address_id);
 CREATE OR REPLACE TRIGGER store_timestamp_trigger
     BEFORE UPDATE ON store
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-
-CREATE INDEX store_manager_staff_id_IDX
-ON store (manager_staff_id);
-
-CREATE INDEX store_address_id_IDX
-ON store (address_id);
-
-ALTER TABLE staff
-ADD CONSTRAINT store_FK FOREIGN KEY (store_id) REFERENCES store (store_id); -- ON DELETE RESTRICT ON UPDATE CASCADE,
-
+/
 
 CREATE TABLE customer (
   customer_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
@@ -185,12 +154,11 @@ CREATE TABLE customer (
   create_date DATE NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT customer_PK PRIMARY KEY (customer_id),
-  CONSTRAINT customer_address_FK FOREIGN KEY (address_id) REFERENCES address (address_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
-  CONSTRAINT customer_store_FK FOREIGN KEY (store_id) REFERENCES store (store_id), -- ON DELETE RESTRICT ON UPDATE CASCADE, isto tbm precisa de trigger...
   CHECK(address_id > 0),
-  CHECK(store_id > 0)
-);
-
+  CHECK(store_id > 0));
+CREATE INDEX customer_store_id_IDX ON customer (store_id);
+CREATE INDEX customer_last_name_IDX ON customer (last_name);
+CREATE INDEX customer_address_id_IDX ON customer (address_id);
 CREATE OR REPLACE TRIGGER customer_timestamp_trigger
     BEFORE UPDATE ON customer
     FOR EACH ROW
@@ -199,73 +167,58 @@ CREATE OR REPLACE TRIGGER customer_timestamp_trigger
     END;
 /
 
-CREATE INDEX customer_store_id_IDX
-ON customer (store_id);
-
-CREATE INDEX customer_last_name_IDX
-ON customer (last_name);
-
-CREATE INDEX customer_address_id_IDX
-ON customer (address_id);
-
-
 CREATE TABLE film (
-  film_id SMALLINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  film_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
   title VARCHAR(255) NOT NULL,
-  description TEXT DEFAULT NULL,
-  release_year YEAR DEFAULT NULL,
-  language_id SMALLINT NOT NULL,
-  original_language_id SMALLINT DEFAULT NULL,
-  rental_duration SMALLINT NOT NULL DEFAULT 3,
-  rental_rate DECIMAL(4,2) NOT NULL DEFAULT 4.99,
-  length SMALLINT DEFAULT NULL,
-  replacement_cost DECIMAL(5,2) NOT NULL DEFAULT 19.99,
-  rating ENUM('G','PG','PG-13','R','NC-17') DEFAULT 'G',
-  special_features SET('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') DEFAULT NULL,
+  description CLOB DEFAULT NULL,
+  release_year NUMBER DEFAULT NULL,
+  language_id NUMBER(5,0) NOT NULL,
+  original_language_id NUMBER(5,0) DEFAULT NULL,
+  rental_duration NUMBER(5,0) DEFAULT 3 NOT NULL,
+  rental_rate DECIMAL(4,2) DEFAULT 4.99 NOT NULL,
+  length NUMBER(5,0) DEFAULT NULL,
+  replacement_cost DECIMAL(5,2) DEFAULT 19.99 NOT NULL,
+  rating VARCHAR(10) DEFAULT 'G',
+  special_features VARCHAR(64) DEFAULT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT film_PK PRIMARY KEY  (film_id),
-  CONSTRAINT language_FK FOREIGN KEY (language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT language_original_FK FOREIGN KEY (original_language_id) REFERENCES language (language_id), -- ON DELETE RESTRICT ON UPDATE CASCADE
+  CHECK(rating IN ('G','PG','PG-13','R','NC-17')),
   CHECK(language_id > 0),
   CHECK(original_language_id > 0),
   CHECK(rental_duration > 0),
   CHECK(length > 0));
+CREATE INDEX film_title_IDX ON film (title);
+CREATE INDEX film_language_id_IDX ON film (language_id);
+CREATE INDEX film_original_language_id_IDX ON film (original_language_id);
 CREATE OR REPLACE TRIGGER film_timestamp_trigger
     BEFORE UPDATE ON film
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-CREATE INDEX film_title_IDX ON film (title);
-CREATE INDEX film_language_id_IDX ON film (language_id);
-CREATE INDEX film_original_language_id_IDX ON film (original_language_id);
+/
 
 CREATE TABLE film_actor (
   actor_id SMALLINT NOT NULL,
   film_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT actor_PK PRIMARY KEY (actor_id),
-  CONSTRAINT film_PK PRIMARY KEY (film_id),
-  CONSTRAINT film_actor_actor_FK FOREIGN KEY (actor_id) REFERENCES actor (actor_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT film_actor_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_actor_PK PRIMARY KEY (actor_id,film_id),
   CHECK(actor_id > 0),
   CHECK(film_id > 0));
+CREATE INDEX film_actor_film_id_IDX ON film_actor (film_id);
 CREATE OR REPLACE TRIGGER film_actor_timestamp_trigger
     BEFORE UPDATE ON film_actor
     FOR EACH ROW
     BEGIN
         :new.last_update := current_timestamp;
     END;
-CREATE INDEX film_actor_film_id_IDX ON film_actor (film_id);
+/
 
 CREATE TABLE film_category (
   film_id SMALLINT NOT NULL,
   category_id SMALLINT NOT NULL,
   last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT film_PK PRIMARY KEY (film_id),
-  CONSTRAINT category_PK PRIMARY KEY (category_id),
-  CONSTRAINT film_category_film_FK FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT film_category_category_FK FOREIGN KEY (category_id) REFERENCES category (category_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT film_category_PK PRIMARY KEY (film_id,category_id),
   CHECK(film_id > 0),
   CHECK(category_id > 0));
 CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
@@ -274,13 +227,141 @@ CREATE OR REPLACE TRIGGER film_category_timestamp_trigger
     BEGIN
         :new.last_update := current_timestamp;
     END;
+/
 
 CREATE TABLE film_text (
   film_id SMALLINT NOT NULL,
   title VARCHAR(255) NOT NULL,
-  description TEXT,
-  CONSTRAINT film_PK PRIMARY KEY (film_id));
-CREATE INDEX film_text_title_description_IDX ON film_text (title,description);
+  description CLOB,
+  CONSTRAINT film_text_PK PRIMARY KEY (film_id));
+
+CREATE TABLE inventory (
+  inventory_id NUMBER(7,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  film_id NUMBER(5,0) NOT NULL,
+  store_id NUMBER(3,0) NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT inventory_PK PRIMARY KEY (inventory_id),
+  CHECK(inventory_id>0),
+  CHECK(film_id>0),
+  CHECK(store_id>0));
+CREATE INDEX inventory_film_id_IDX ON inventory (film_id);
+CREATE INDEX inventory_store_film_id_IDX ON inventory (store_id,film_id);
+CREATE OR REPLACE TRIGGER inventory_timestamp_trigger
+    BEFORE UPDATE ON inventory
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
+
+CREATE TABLE language (
+  language_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  name CHAR(20) NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT language_PK PRIMARY KEY (language_id),
+  CHECK(language_id>0));
+CREATE OR REPLACE TRIGGER language_timestamp_trigger
+    BEFORE UPDATE ON language
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
+
+CREATE TABLE payment (
+  payment_id NUMBER(5,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  customer_id NUMBER(5,0) NOT NULL,
+  staff_id NUMBER(3,0) NOT NULL,
+  rental_id NUMBER(10,0) DEFAULT NULL,
+  amount DECIMAL(5,2) NOT NULL,
+  payment_date DATE NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT payment_PK PRIMARY KEY (payment_id),
+  CHECK(customer_id>0),
+  CHECK(staff_id>0));
+CREATE INDEX payment_staff_id_IDX ON payment (staff_id);
+CREATE INDEX payment_customer_id_IDX ON payment (customer_id);
+CREATE OR REPLACE TRIGGER payment_timestamp_trigger
+    BEFORE UPDATE ON payment
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
+
+CREATE TABLE rental (
+  rental_id NUMBER(10,0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+  rental_date DATE NOT NULL,
+  inventory_id NUMBER(7,0) NOT NULL,
+  customer_id NUMBER(5,0) NOT NULL,
+  return_date DATE DEFAULT NULL,
+  staff_id NUMBER(3,0) NOT NULL,
+  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT rental_PK PRIMARY KEY (rental_id),
+  CHECK(inventory_id>0),
+  CHECK(customer_id>0),
+  CHECK(staff_id>0));
+CREATE INDEX rental_date_inventory_customer_IDX ON rental (rental_date,inventory_id,customer_id);
+CREATE INDEX rental_inventory_id_IDX ON rental (inventory_id);
+CREATE INDEX rental_customer_id_IDX ON rental (customer_id);
+CREATE INDEX rental_staff_id_IDX ON rental (staff_id);
+CREATE OR REPLACE TRIGGER rental_timestamp_trigger
+    BEFORE UPDATE ON rental
+    FOR EACH ROW
+    BEGIN
+        :new.last_update := current_timestamp;
+    END;
+/
+
+
+-- END OF TABLE CREATION
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- ------------------------------------------------------------------------------------
 
 --
 -- Triggers for loading film_text from film
@@ -307,130 +388,6 @@ CREATE TRIGGER `del_film` AFTER DELETE ON `film` FOR EACH ROW BEGIN
     DELETE FROM film_text WHERE film_id = old.film_id;
   END;;
 DELIMITER ;
-
-
-CREATE TABLE inventory (
-  inventory_id NUMBER(7, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
-  film_id NUMBER(5, 0) NOT NULL,
-  store_id NUMBER(3, 0) NOT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY  (inventory_id),
-  CONSTRAINT fk_inventory_store FOREIGN KEY (store_id) REFERENCES store (store_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_inventory_film FOREIGN KEY (film_id) REFERENCES film (film_id), --ON DELETE RESTRICT ON UPDATE CASCADE,
-  CHECK(inventory_id>0),
-  CHECK(film_id>0),
-  CHECK(store_id>0));
-CREATE OR REPLACE TRIGGER inventory_timestamp_trigger
-    BEFORE UPDATE ON inventory
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-CREATE INDEX inventory_film_id_IDX ON inventory (film_id);
-CREATE INDEX inventory_store_film_id_IDX ON inventory (store_id,film_id);
-
-CREATE TABLE language (
-  language_id NUMBER(5, 0) GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
-  name CHAR(20) NOT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT language_PK PRIMARY KEY (language_id),
-  CHECK(language_id>0));
-CREATE OR REPLACE TRIGGER language_timestamp_trigger
-    BEFORE UPDATE ON language
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-
---
--- Table structure for table `payment`
---
-
-CREATE TABLE payment (
-  payment_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  customer_id SMALLINT UNSIGNED NOT NULL,
-  staff_id TINYINT UNSIGNED NOT NULL,
-  rental_id INT DEFAULT NULL,
-  amount DECIMAL(5,2) NOT NULL,
-  payment_date DATETIME NOT NULL,
-  last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY  (payment_id),
-  KEY idx_fk_staff_id (staff_id),
-  KEY idx_fk_customer_id (customer_id),
-  CONSTRAINT fk_payment_rental FOREIGN KEY (rental_id) REFERENCES rental (rental_id) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_payment_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE OR REPLACE TRIGGER payment_timestamp_trigger
-    BEFORE UPDATE ON payment
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-/
-
-
---
--- Table structure for table `rental`
---
-
-CREATE TABLE rental (
-  rental_id INT NOT NULL AUTO_INCREMENT,
-  rental_date DATETIME NOT NULL,
-  inventory_id MEDIUMINT UNSIGNED NOT NULL,
-  customer_id SMALLINT UNSIGNED NOT NULL,
-  return_date DATETIME DEFAULT NULL,
-  staff_id TINYINT UNSIGNED NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (rental_id),
-  UNIQUE KEY  (rental_date,inventory_id,customer_id),
-  KEY idx_fk_inventory_id (inventory_id),
-  KEY idx_fk_customer_id (customer_id),
-  KEY idx_fk_staff_id (staff_id),
-  CONSTRAINT fk_rental_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_rental_inventory FOREIGN KEY (inventory_id) REFERENCES inventory (inventory_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_rental_customer FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON DELETE RESTRICT ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE OR REPLACE TRIGGER rental_timestamp_trigger
-    BEFORE UPDATE ON rental
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-/
-
---
--- Table structure for table `staff`
---
-
---
--- Table structure for table `store`
---
-
-CREATE TABLE store (
-  store_id SMALLINT NOT NULL AUTO_INCREMENT,
-  manager_staff_id SMALLINT NOT NULL,
-  address_id SMALLINT NOT NULL,
-  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT store_PK PRIMARY KEY (store_id),
-  UNIQUE KEY idx_unique_manager (manager_staff_id),
-  KEY idx_fk_address_id (address_id),
-  CONSTRAINT fk_store_staff FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_store_address FOREIGN KEY (address_id) REFERENCES address (address_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CHECK(store_id>0),
-  CHECK(manager_staff_id>0),
-  CHECK(address_id>0)
-);
-
-CREATE OR REPLACE TRIGGER store_timestamp_trigger
-    BEFORE UPDATE ON store
-    FOR EACH ROW
-    BEGIN
-        :new.last_update := current_timestamp;
-    END;
-/
 
 --
 -- View structure for view `customer_list`
