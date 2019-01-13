@@ -161,7 +161,53 @@ db.store.aggregate([
 ])
 
 
-// IN WORK - Clientes que mais tempo demoram a devolver os filmes (média)
+// DONE - Costumers que mais tempo demoram a devolver os filmes (média)
+db.rental.aggregate([
+    {$match:{return_date:{$exists:true}}},
+    {$project:{
+        _id:0,
+        rental_id:1,
+        rental_date: {$dateFromString: {
+            dateString:"$rental_date",format:"%Y-%m-%d %H:%M:%S"}},
+        return_date:  {$dateFromString: {
+            dateString:"$return_date",format:"%Y-%m-%d %H:%M:%S"}},
+        customer_id:1,
+    }},
+    {$project:{
+        _id:0,
+        rental_id:1,
+        rental_date:1,
+        return_date:1,
+        SECS: {$divide: [{$subtract: ['$return_date', '$rental_date']}, 1000]},
+        // HOURS: {$divide: [{$subtract: ['$return_date', '$rental_date']}, 3600000]},
+        // DAYS: {$divide: [{$subtract: ['$return_date', '$rental_date']}, 86400000]},
+        customer_id:1,
+    }},
+    {$lookup: {
+        from: 'customer',
+        localField: 'customer_id',
+        foreignField: 'customer_id',
+        as: 'CUSTOMER'
+    }},
+    {$unwind: '$CUSTOMER'},
+    {$match: {"CUSTOMER.active":1}},
+    {$group:{
+        _id:{
+            customer_id:'$customer_id',
+            customer_name:'$CUSTOMER.name'
+        },
+        avgReturnSeconds: {$avg: '$SECS'},
+        listAVG: {$push: '$SECS'}
+    }},
+    {$project:{
+        _id:1,
+        avgReturnSeconds:1,
+        avgReturnDays: {$divide: ['$avgReturnSeconds', 86400]},
+        // listAVG:1
+    }},
+    {$sort:{avgReturnSeconds:-1}},
+    {$limit:10}
+])
 
 
 // DONE - Lojas com mais rentals feitos

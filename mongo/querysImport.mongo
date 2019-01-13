@@ -41,3 +41,47 @@ db.storeAUX.aggregate([
     }}
 ])
 
+
+db.testing.find()
+db.testing.update(
+    {n:7},
+    {$set: {
+        dateMongo: {$dateFromString: {
+            dateString:"date", 
+            format:"%Y-%m-%d %H:%M:%S"
+        }}
+    }}
+)
+ db.testing.aggregate([
+    {$match:{n:7}},
+    {$project: {
+        _id:0,
+        date: {$dateFromString: {dateString:"$date",format:"%Y-%m-%d %H:%M:%S"}},
+    }}
+])   
+
+
+
+db.rental.find({return_date:'\\N'})
+db.rental.aggregate([
+    {$match:{return_date:{$exists:false}}}
+])
+db.rental.aggregate([
+    {$match:{return_date:{$exists:true}}}
+])
+
+
+db.rental.update({return_date: '\\N'},{$unset:{return_date:1}},{multi:true})
+
+db.rental.aggregate([
+    {$match:{return_date:{$exists:true}}},
+    {$project:{
+        rental_id:1,
+        film_id:1,
+        rental_date: {$dateFromString: {dateString:"$rental_date",format:"%Y-%m-%d %H:%M:%S"}},
+        return_date:  {$dateFromString: {dateString:"$return_date",format:"%Y-%m-%d %H:%M:%S"}},
+        staff_id:1,
+        customer_id:1
+    }}
+])
+

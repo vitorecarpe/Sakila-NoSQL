@@ -201,6 +201,15 @@ mongo.exe nosql --eval "db.storeAUX.aggregate([
     {\$out:'store'}
 ])"
 
+
+## This removes any null values from return_date
+mongo.exe nosql --eval 'db.rental.update(
+    {return_date:"\\N"},
+    {$unset:{return_date:""}},
+    {multi:true}
+)'
+
+
 ### Drop AUX documents
 # Some of the initial imported tables got changed, or were only auxiliary
 # Here we delete any unneeded documents left behind
