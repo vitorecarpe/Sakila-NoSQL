@@ -85,3 +85,20 @@ db.rental.aggregate([
     }}
 ])
 
+
+db.rental.aggregate([
+    {$group:{
+        _id:{
+            film_id:'$film_id',
+            customer_id:'$customer_id'
+        },
+        rental_list:{$push:'$rental_id'}
+    }},
+    {$project:{
+        size:{$size:'$rental_list'}
+    }},
+    {$sort:{size:-1}}
+])
+
+
+

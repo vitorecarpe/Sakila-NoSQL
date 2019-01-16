@@ -29,8 +29,11 @@ db.rental.aggregate([
             customer_id:'$customer_id',
             customer_name:'$customer_name'
         },
-        numberRentals: {$sum: 1},
         listRentals: {$push: '$rental_id'}
+    }},
+    {$project:{
+        _id:1,
+        numberRentals: {$size: '$listRentals'},
     }},
     {$sort:{numberRentals:-1}},
     {$limit:10}
@@ -49,6 +52,7 @@ db.rental.aggregate([
     {$project:{
         _id:0,
         rental_id:1,
+        film_id:1,
         customer_id:1,
         customer_name: "$CUSTOMER.name",
         active: "$CUSTOMER.active"
@@ -59,7 +63,7 @@ db.rental.aggregate([
             customer_id:'$customer_id',
             customer_name:'$customer_name'
         },
-        setFilms: {$addToSet: '$rental_id'}
+        setFilms: {$addToSet: '$film_id'}
     }},
     {$project:{
         _id:1,
