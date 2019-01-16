@@ -29,7 +29,7 @@ return s, sum(p.amount)
 order by sum(p.amount) desc
 limit 5
 
-//Clientes mais demorados a devolver POR ACABAR
+//Clientes mais demorados a devolver 
 match (c:Customer)<-[:RENTED_BY]-(r:Rental)
 where exists(r.return_date)
 with c, avg(duration.between(datetime(r.rental_date), datetime(r.return_date))) as avg_dur
