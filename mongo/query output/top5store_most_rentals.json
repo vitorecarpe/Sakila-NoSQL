@@ -1,2 +1,2 @@
-{ "_id" : { "store_id" : 2 }, "numberRentals" : 8121 }
-{ "_id" : { "store_id" : 1 }, "numberRentals" : 7923 }
+{ "_id" : { "staff_id" : 1 }, "numberRentals" : 8040 }
+{ "_id" : { "staff_id" : 2 }, "numberRentals" : 8004 }

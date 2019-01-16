@@ -215,7 +215,8 @@ db.rental.aggregate([
 db.rental.aggregate([
     {$group:{
         _id:{
-            store_id:'$store_id',
+            // store_id:'$store_id',
+            staff_id:'$staff_id',
         },
         numberRentals: {$sum: 1},
         // listRentals: {$push: '$rental_id'}
