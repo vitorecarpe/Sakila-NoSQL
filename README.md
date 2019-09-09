@@ -12,3 +12,7 @@
 [Miguel Lobo](https://github.com/MLobo1997)
 
 [Vitor Peixoto](https://github.com/VitorPeixoto97)
+
+# Classification
+
+18.0
